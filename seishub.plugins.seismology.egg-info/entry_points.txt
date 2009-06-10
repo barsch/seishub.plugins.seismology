@@ -1,0 +1,3 @@
+[seishub.plugins]
+seismology = seishub.plugins.seismology
+

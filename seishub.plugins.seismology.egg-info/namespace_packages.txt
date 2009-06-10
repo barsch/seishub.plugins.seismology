@@ -1,0 +1,2 @@
+seishub
+seishub.plugins
