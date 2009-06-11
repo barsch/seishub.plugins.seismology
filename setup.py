@@ -24,14 +24,12 @@
 setup.py bdist_egg
 """
 
-from setuptools import setup, find_packages
-
-version = '0.0.1'
+from setuptools import setup
 
 
 setup(
     name='seishub.plugins.seismology',
-    version=version,
+    version='0.0.1',
     description="",
     long_description="""""",
     classifiers=[],
@@ -40,12 +38,12 @@ setup(
     author_email='barsch@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/seishub',
     license='BSD',
-    packages=find_packages(exclude=['ez_setup']),
+    packages=['seishub.plugins.seismology'],
     namespace_packages=['seishub', 'seishub.plugins'],
     include_package_data=True,
     zip_safe=False,
     install_requires=[
         'setuptools',
     ],
-    entry_points = {'seishub.plugins': ['seismology = seismology',]}, 
+    entry_points = {'seishub.plugins': ['seishub.plugins.seismology = seishub.plugins.seismology',]}, 
 )
