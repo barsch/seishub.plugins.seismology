@@ -91,8 +91,8 @@ YAHOO.example.DynamicData = function() {
         {key:"network_id", label:"Network ID"},
         {key:"station_id", label:"Station ID"},
         {key:"station_name", label:"Station Name"},
-        {key:"latitude", label:"Latitude [°]"},
-        {key:"longitude", label:"Longitude [°]"},
+        {key:"latitude", label:"Latitude [&deg;]"},
+        {key:"longitude", label:"Longitude [&deg;]"},
         {key:"elevation", label:"Elevation [m]"},
         {key:"start_datetime", label:"Start Date/Time"},
         {key:"end_datetime", label:"End Date/Time"},
@@ -135,7 +135,7 @@ YAHOO.example.DynamicData = function() {
         var offset = (oState.pagination) ? oState.pagination.recordOffset : 0;
         var limit = (oState.pagination) ? oState.pagination.rowsPerPage : 25;
         // Build custom request
-        return "&offset=" + offset + "&limit=" + (offset + limit - 1);
+        return "offset=" + offset + "&limit=" + (offset + limit - 1);
     };
 
     // DataTable configuration
