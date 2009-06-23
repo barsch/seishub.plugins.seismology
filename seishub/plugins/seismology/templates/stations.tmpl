@@ -1,0 +1,155 @@
+#def CSS
+<link rel="stylesheet" type="text/css" href="/yui/build/fonts/fonts-min.css" />
+<link rel="stylesheet" type="text/css" href="/yui/build/paginator/assets/skins/sam/paginator.css" />
+<link rel="stylesheet" type="text/css" href="/yui/build/datatable/assets/skins/sam/datatable.css" />
+<link rel="stylesheet" type="text/css" href="/yui/build/calendar/assets/skins/sam/calendar.css" />
+<link rel="stylesheet" type="text/css" href="/yui/build/menu/assets/skins/sam/menu.css" />
+<link rel="stylesheet" type="text/css" href="/yui/build/button/assets/skins/sam/button.css" />
+#end def
+#def JAVASCRIPT
+<script type="text/javascript" src="/yui/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+<script type="text/javascript" src="/yui/build/connection/connection-min.js"></script>
+<script type="text/javascript" src="/yui/build/json/json-min.js"></script>
+<script type="text/javascript" src="/yui/build/element/element-min.js"></script>
+<script type="text/javascript" src="/yui/build/paginator/paginator-min.js"></script>
+<script type="text/javascript" src="/yui/build/datasource/datasource-min.js"></script>
+<script type="text/javascript" src="/yui/build/datatable/datatable-min.js"></script>
+<script type="text/javascript" src="/yui/build/container/container_core-min.js"></script>
+<script type="text/javascript" src="/yui/build/menu/menu-min.js"></script>
+<script type="text/javascript" src="/yui/build/button/button-min.js"></script>
+#end def
+
+
+
+
+<h1>Stations</h1>
+
+<form method="POST" id="filter" action="">
+  <fieldset id="filter_fieldset">
+    <legend>Filter</legend>
+    <div class="field-left">
+      <label>Network</label><br />
+      <input type="submit" id="network_id_button" name="network_id_button"
+             value="
+             #echo $network_id or '*'
+             " />
+      <select id="network_id" name="network_id">
+        <option value="">*</option>
+        #for $id in $network_ids
+        <option value="$id" 
+          #if $id==$network_id
+          selected="selected"
+          #end if
+          >$id</option>
+        #end for
+      </select>
+    </div>
+    <div class="field">
+      <label>Station</label><br />
+      <input type="submit" id="station_id_button" name="station_id_button"
+        value="
+        #echo $station_id or '*'
+        " />
+      <select id="station_id" name="station_id">
+        <option value="">*</option>
+        #for $id in $station_ids
+        <option value="$id" 
+          #if $id==$station_id
+          selected="selected"
+          #end if
+          >$id</option>
+        #end for
+      </select>
+    </div>
+  </fieldset>
+</form>
+
+<br />
+
+<div id="dynamicdata"></div>
+
+<script type="text/javascript">
+/* <![CDATA[ */
+
+YAHOO.util.Event.onContentReady("filter_fieldset", function () {
+    var b1 = new YAHOO.widget.Button("network_id_button", 
+                                     {type: "menu", menu: "network_id" });
+    var b2 = new YAHOO.widget.Button("station_id_button",
+                                     {type: "menu", menu: "station_id" });
+});
+
+YAHOO.example.DynamicData = function() {
+    
+    // Set initial request
+    var initialRequest = "startIndex=0&results=25"
+    var info = '<a target="_blank" href="/xml/seismology/station/'
+    var url = '/seismology/station/getStationList?network_id=$network_id' +
+              '&station_id=$station_id&'
+    
+    // Column definitions
+    var myColumnDefs = [ 
+        {key:"network_id", label:"Network ID"},
+        {key:"station_id", label:"Station ID"},
+        {key:"station_name", label:"Station Name"},
+        {key:"latitude", label:"Latitude [°]"},
+        {key:"longitude", label:"Longitude [°]"},
+        {key:"elevation", label:"Elevation [m]"},
+        {key:"start_datetime", label:"Start Date/Time"},
+        {key:"end_datetime", label:"End Date/Time"},
+        {key:"resource_name", label:'', className:'center', 
+             formatter: function (el, oRecord, oColumn, oData) {
+                 el.innerHTML = info + oData + '">[XSEED]<\/a> ' +
+                 info + oData + '?format=dataless">[Dataless]<\/a> ' +
+                 info + oData + '?format=resp">[RESP]<\/a> ' +
+                 info + oData + '?format=map">[HTML]<\/a> ';
+             }}
+    ];
+    
+    // DataSource instance
+    var myDS = new
+    YAHOO.util.DataSource(url);
+    myDS.responseType = YAHOO.util.DataSource.TYPE_XML;
+    myDS.responseSchema = {
+        resultNode: "resource", 
+        fields: [
+            {key:"network_id"},
+            {key:"station_id"},
+            {key:"station_name"},
+            {key:"latitude"},
+            {key:"longitude"},
+            {key:"elevation"},
+            {key:"start_datetime"},
+            {key:"end_datetime"},
+            {key:"resource_name"}
+        ],
+        metaNode : "query",
+        metaFields: {
+            totalResultsAvailable : "totalResultsAvailable", 
+            totalResultsReturned : "totalResultsReturned",
+        }
+    };
+    
+    // DataTable configuration
+    var myConfigs = {
+        initialRequest: initialRequest,
+        dynamicData: true,
+        paginator: new YAHOO.widget.Paginator({
+            rowsPerPage: 25, 
+            template: YAHOO.widget.Paginator.TEMPLATE_ROWS_PER_PAGE, 
+            rowsPerPageOptions: [10,25,50,100],
+            alwaysVisible: false
+        })
+    };
+    
+    // DataTable instance
+    var myDT = new YAHOO.widget.DataTable("dynamicdata", myColumnDefs, myDS, 
+                                          myConfigs);
+    // Update totalRecords on the fly with value from server
+    myDT.handleDataReturnPayload = function(oRequest, oResponse, oPayload) {
+        oPayload.totalRecords = oResponse.meta.totalResultsAvailable;
+        return oPayload;
+    }
+    return {ds: myDS, dt: myDT};
+}();
+/* ]]> */
+</script>
