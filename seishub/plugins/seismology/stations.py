@@ -88,28 +88,32 @@ class StationsMapper(Component):
         # parse input arguments
         network_id = request.args0.get('network_id', '')
         station_id = request.args0.get('station_id', '')
+        all = request.args0.get('all', False)
         try:
-            offset = int(request.args0.get('startIndex', 0))
-            limit = int(request.args0.get('results', 25))
+            offset = int(request.args0.get('offset', 0))
+            limit = int(request.args0.get('limit', 25))
         except:
             offset = 0
-            limit = 25
+            limit = None
         # filter indexes
         catalog = self.env.catalog.index_catalog
         xmlindex_list = catalog.getIndexes('seismology', 'station')[::-1]
-        filter = ['latitude', 'longitude', 'start_datetime', 'end_datetime',
-                  'station_id', 'network_id',
-                  'station_name', 'elevation']
-        xmlindex_list = [x for x in xmlindex_list if x.label in filter]
+        if not all:
+            filter = ['latitude', 'longitude', 'start_datetime',
+                      'end_datetime', 'station_id', 'network_id',
+                      'station_name', 'elevation']
+            xmlindex_list = [x for x in xmlindex_list if x.label in filter]
         if not xmlindex_list:
             return
         # build up query
         query, joins = catalog._createIndexView(xmlindex_list, compact=False)
         query = query.select_from(joins)
         if network_id != '':
-            query = query.where(sql.literal_column('network_id.keyval') == network_id)
+            query = query.where(
+                sql.literal_column('network_id.keyval') == network_id)
         if station_id != '':
-            query = query.where(sql.literal_column('station_id.keyval') == station_id)
+            query = query.where(
+                sql.literal_column('station_id.keyval') == station_id)
         # count all possible results
         try:
             results = self.env.db.query(query).fetchall()
@@ -117,12 +121,17 @@ class StationsMapper(Component):
         except:
             count = 0
         # generate XML result
-        xml = Element("query", totalResultsAvailable=str(count))
+        xml = Element("query", total_results=str(count))
         # execute query
         query = query.order_by(sql.literal_column('network_id.keyval'))
         query = query.order_by(sql.literal_column('station_id.keyval'))
+        if all:
+            query = query.order_by(sql.literal_column('location_id.keyval'))
+            query = query.order_by(sql.literal_column('channel_id.keyval'))
         query = query.order_by(sql.literal_column('start_datetime.keyval'))
         query = query.offset(offset).limit(limit)
+        if limit:
+            query = query.limit(limit)
         try:
             results = self.env.db.query(query).fetchall()
             if not results:
@@ -130,7 +139,7 @@ class StationsMapper(Component):
         except:
             return toString(xml)
         # cycle over results
-        xml.attrib['totalResultsReturned'] = str(len(results))
+        xml.attrib['results_returned'] = str(len(results))
         for result in results:
             s = Sub(xml, "resource")
             for (key, value) in dict(result).iteritems():
