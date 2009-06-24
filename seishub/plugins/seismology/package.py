@@ -63,6 +63,9 @@ class SeismicStationResourceType(Component):
     registerIndex('end_datetime',
                   '/xseed/station_control_header#station_identifier/end_effective_date',
                   'datetime')
+    registerIndex('quality',
+                  '/xseed/station_control_header#station_identifier/quality',
+                  'numeric')
 
 
 class SeismicEventResourceType(Component):

@@ -363,6 +363,7 @@
       <xsd:element name="end_effective_date" type="dateUnionType" />
       <xsd:element name="update_flag" type="xsd:string" />
       <xsd:element name="network_code" type="xsd:string" />
+      <xsd:element maxOccurs="1" minOccurs="0" name="quality" type="xsd:long" />
     </xsd:sequence>
     <xsd:attribute fixed="050" name="blockette" type="xsd:string" />
   </xsd:complexType>
