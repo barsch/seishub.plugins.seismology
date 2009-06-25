@@ -23,6 +23,7 @@ class StationsPanel(Component):
         nid = request.args0.get('network_id', False)
         nid_changed = request.args0.get('network_id_button', False)
         sid = request.args0.get('station_id', False)
+        status = request.args0.get('status', '')
         # reset + defaults
         if nid == '*':
             nid = False
@@ -33,6 +34,7 @@ class StationsPanel(Component):
         data = {}
         data['network_id'] = nid or ''
         data['station_id'] = sid or ''
+        data['status'] = status or ''
         data['network_ids'] = self._getNetworkIDs()
         data['station_ids'] = self._getStationIDs(nid)
         return data
@@ -88,6 +90,7 @@ class StationsMapper(Component):
         # parse input arguments
         network_id = request.args0.get('network_id', '')
         station_id = request.args0.get('station_id', '')
+        status = request.args0.get('status', '')
         all = request.args0.get('all', False)
         try:
             offset = int(request.args0.get('offset', 0))
@@ -114,6 +117,13 @@ class StationsMapper(Component):
         if station_id != '':
             query = query.where(
                 sql.literal_column('station_id.keyval') == station_id)
+        if status == 'active':
+            query = query.where(
+                sql.literal_column('end_datetime.keyval') == None)
+        elif status == 'inactive':
+            query = query.where(
+                sql.literal_column('end_datetime.keyval') != None)
+
         # count all possible results
         try:
             results = self.env.db.query(query).fetchall()

@@ -9,7 +9,6 @@
 #def JAVASCRIPT
 <script type="text/javascript" src="/yui/build/yahoo-dom-event/yahoo-dom-event.js"></script>
 <script type="text/javascript" src="/yui/build/connection/connection-min.js"></script>
-<script type="text/javascript" src="/yui/build/json/json-min.js"></script>
 <script type="text/javascript" src="/yui/build/element/element-min.js"></script>
 <script type="text/javascript" src="/yui/build/paginator/paginator-min.js"></script>
 <script type="text/javascript" src="/yui/build/datasource/datasource-min.js"></script>
@@ -61,6 +60,14 @@
         #end for
       </select>
     </div>
+    <div class="field">
+      <label>Status</label><br />
+      <div id="status_button" class="yui-buttongroup"> 
+        <input id="status" type="radio" name="" value="All" checked /> 
+        <input id="status" type="radio" name="active" value="Active" /> 
+        <input id="status" type="radio" name="inactive" value="Inactive" /> 
+      </div> 
+    </div>
   </fieldset>
 </form>
 
@@ -79,7 +86,7 @@ YAHOO.util.Event.onContentReady("filter_fieldset", function () {
 });
 
 YAHOO.example.DynamicData = function() {
-    
+  
     // Set initial request
     var initialRequest = "offset=0&limit=25"
     var info = '<a target="_blank" href="/xml/seismology/station/'
@@ -158,12 +165,22 @@ YAHOO.example.DynamicData = function() {
     // Enable row highlighting
     myDT.subscribe("rowMouseoverEvent", myDT.onEventHighlightRow);
     myDT.subscribe("rowMouseoutEvent", myDT.onEventUnhighlightRow);
-
+    
     // Update totalRecords on the fly with value from server
     myDT.handleDataReturnPayload = function(oRequest, oResponse, oPayload) {
         oPayload.totalRecords = oResponse.meta.totalResultsAvailable;
         return oPayload;
     }
+
+    var handleClick = function(e) {
+        ds = myDT.getDataSource()
+        ds.sendRequest('status=inactive', {success: myDT.onDataReturnSetRows, 
+                                           scope: myDT});
+    }; 
+
+    var btn = new YAHOO.widget.ButtonGroup("status_button");
+    btn.on("click", handleClick, myDT); 
+
     return {ds: myDS, dt: myDT};
 }();
 /* ]]> */
