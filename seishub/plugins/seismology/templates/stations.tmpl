@@ -30,10 +30,10 @@
       <label>Network</label><br />
       <input type="submit" id="network_id_button" name="network_id_button"
              value="
-             #echo $network_id or '*'
+             #echo $network_id or '&nbsp; * &nbsp;'
              " />
       <select id="network_id" name="network_id">
-        <option value="">*</option>
+        <option value=""> * </option>
         #for $id in $network_ids
         <option value="$id" 
           #if $id==$network_id
@@ -47,10 +47,10 @@
       <label>Station</label><br />
       <input type="submit" id="station_id_button" name="station_id_button"
         value="
-        #echo $station_id or '*'
+        #echo $station_id or '&nbsp; * &nbsp;'
         " />
       <select id="station_id" name="station_id">
-        <option value="">*</option>
+        <option value=""> * </option>
         #for $id in $station_ids
         <option value="$id" 
           #if $id==$station_id
@@ -80,9 +80,9 @@
 
 YAHOO.util.Event.onContentReady("filter_fieldset", function () {
     var b1 = new YAHOO.widget.Button("network_id_button", 
-                                     {type: "menu", menu: "network_id" });
+                                     {type: "split", menu: "network_id" });
     var b2 = new YAHOO.widget.Button("station_id_button",
-                                     {type: "menu", menu: "station_id" });
+                                     {type: "split", menu: "station_id" });
 });
 
 YAHOO.example.DynamicData = function() {
@@ -92,6 +92,7 @@ YAHOO.example.DynamicData = function() {
     var info = '<a target="_blank" href="/xml/seismology/station/'
     var url = "/seismology/station/getStationList?network_id=$network_id" +
               "&station_id=$station_id&"
+    var status_list = ['', 'active', 'inactive'];
     
     // Column definitions
     var myColumnDefs = [ 
@@ -171,15 +172,20 @@ YAHOO.example.DynamicData = function() {
         oPayload.totalRecords = oResponse.meta.totalResultsAvailable;
         return oPayload;
     }
-
-    var handleClick = function(e) {
-        ds = myDT.getDataSource()
-        ds.sendRequest('status=inactive', {success: myDT.onDataReturnSetRows, 
-                                           scope: myDT});
+    var handleStatus = function(e) {
+        var status = status_list[e.newValue.index];
+        var oCallback = {
+            success: myDT.onDataReturnInitializeTable,
+            failure: myDT.onDataReturnInitializeTable,
+            scope: myDT,
+            argument: myDT.getState()
+        }
+        var ir = myDT.get('initialRequest');
+        myDS.sendRequest(ir + '&status=' + status, oCallback);
     }; 
 
-    var btn = new YAHOO.widget.ButtonGroup("status_button");
-    btn.on("click", handleClick, myDT); 
+    var myButtonGroup = new YAHOO.widget.ButtonGroup("status_button");
+    myButtonGroup.subscribe('checkedButtonChange', handleStatus);
 
     return {ds: myDS, dt: myDT};
 }();
