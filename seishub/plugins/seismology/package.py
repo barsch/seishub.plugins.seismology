@@ -139,7 +139,7 @@ class WaveformsPanel(Component):
 
     def render(self, request):
         data = {}
-        data['current_seed_files'] = len(self.env.current_seed_files)
+        data['current_seed_files'] = len(self.env.watchlist)
         return data
 
 
