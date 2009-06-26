@@ -88,7 +88,7 @@ YAHOO.util.Event.onContentReady("filter_fieldset", function () {
 YAHOO.example.DynamicData = function() {
   
     // Set initial request
-    var initialRequest = "offset=0&limit=25"
+    var initialRequest = "offset=0&limit=20"
     var info = '<a target="_blank" href="/xml/seismology/station/'
     var url = "/seismology/station/getStationList?network_id=$network_id" +
               "&station_id=$station_id&"
@@ -141,7 +141,7 @@ YAHOO.example.DynamicData = function() {
         // Get states or use defaults
         oState = oState || {pagination:null, sortedBy:null};
         var offset = (oState.pagination) ? oState.pagination.recordOffset : 0;
-        var limit = (oState.pagination) ? oState.pagination.rowsPerPage : 25;
+        var limit = (oState.pagination) ? oState.pagination.rowsPerPage : 20;
         // Build custom request
         return "offset=" + offset + "&limit=" + (offset + limit - 1);
     };
@@ -151,9 +151,9 @@ YAHOO.example.DynamicData = function() {
         initialRequest: initialRequest,
         dynamicData: true,
         paginator: new YAHOO.widget.Paginator({
-            rowsPerPage: 25, 
+            rowsPerPage: 20, 
             template: YAHOO.widget.Paginator.TEMPLATE_ROWS_PER_PAGE, 
-            rowsPerPageOptions: [10, 25, 50, 100],
+            rowsPerPageOptions: [10, 20, 50, 100],
             alwaysVisible: false
         }),
         generateRequest : myRequestBuilder 

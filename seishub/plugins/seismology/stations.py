@@ -94,7 +94,7 @@ class StationsMapper(Component):
         all = request.args0.get('all', False)
         try:
             offset = int(request.args0.get('offset', 0))
-            limit = int(request.args0.get('limit', 25))
+            limit = int(request.args0.get('limit', 20))
         except:
             offset = 0
             limit = None
