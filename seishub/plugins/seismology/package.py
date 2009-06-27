@@ -6,7 +6,7 @@ Seismology package for SeisHub.
 from seishub.core import Component, implements
 from seishub.packages.installer import registerIndex, registerSchema, \
     registerStylesheet
-from seishub.packages.interfaces import IAdminPanel, IPackage, IResourceType
+from seishub.packages.interfaces import IPackage, IResourceType
 import os
 
 
@@ -127,32 +127,3 @@ class SeismicEventResourceType(Component):
                   'numeric')
     registerIndex('event_type', '/event/type', 'text')
     registerIndex('localisation_method', '/event/event_type', 'text')
-
-
-class WaveformsPanel(Component):
-    """
-    """
-    implements(IAdminPanel)
-
-    template = 'templates' + os.sep + 'waveforms.tmpl'
-    panel_ids = ('seismology', 'Seismology', 'waveforms', 'Waveforms')
-
-    def render(self, request):
-        data = {}
-        data['current_seed_files'] = len(self.env.watchlist)
-        return data
-
-
-class EventsPanel(Component):
-    """
-    """
-    implements(IAdminPanel)
-
-    template = 'templates' + os.sep + 'events.tmpl'
-    panel_ids = ('seismology', 'Seismology', 'events', 'Events')
-
-    def render(self, request):
-        data = {}
-        return data
-
-

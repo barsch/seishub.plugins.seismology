@@ -1,8 +1,96 @@
+#def CSS
+<link rel="stylesheet" type="text/css" href="/yui/build/fonts/fonts-min.css" />
+<link rel="stylesheet" type="text/css" href="/yui/build/paginator/assets/skins/sam/paginator.css" />
+<link rel="stylesheet" type="text/css" href="/yui/build/datatable/assets/skins/sam/datatable.css" />
+<link rel="stylesheet" type="text/css" href="/yui/build/calendar/assets/skins/sam/calendar.css" />
+<link rel="stylesheet" type="text/css" href="/yui/build/menu/assets/skins/sam/menu.css" />
+<link rel="stylesheet" type="text/css" href="/yui/build/button/assets/skins/sam/button.css" />
+#end def
+#def JAVASCRIPT
+<script type="text/javascript" src="/yui/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+<script type="text/javascript" src="/yui/build/connection/connection-min.js"></script>
+<script type="text/javascript" src="/yui/build/element/element-min.js"></script>
+<script type="text/javascript" src="/yui/build/paginator/paginator-min.js"></script>
+<script type="text/javascript" src="/yui/build/datasource/datasource-min.js"></script>
+<script type="text/javascript" src="/yui/build/datatable/datatable-min.js"></script>
+<script type="text/javascript" src="/yui/build/container/container_core-min.js"></script>
+<script type="text/javascript" src="/yui/build/menu/menu-min.js"></script>
+<script type="text/javascript" src="/yui/build/button/button-min.js"></script>
+#end def
+
 <h1>Waveforms</h1>
 
-<h2>Search waveforms</h2>
+<form method="POST" id="filter" action="">
+  <fieldset id="filter_fieldset">
+    <legend>Filter</legend>
+    <div id="network_id" class="field-left">
+      <label>Network</label><br />
+    </div>
+    <div id="station_id" class="field-left">
+      <label>Station</label><br />
+    </div>
+    <div id="location_id" class="field-left">
+      <label>Location</label><br />
+    </div>
+    <div id="channel_id" class="field">
+      <label>Channel</label><br />
+    </div>
+    <div class="field">
+      <label>Status</label><br />
+      <div id="status_button" class="yui-buttongroup"> 
+        <input id="status" type="radio" name="" value="All" checked /> 
+        <input id="status" type="radio" name="active" value="Active" /> 
+        <input id="status" type="radio" name="inactive" value="Inactive" /> 
+      </div> 
+    </div>
+  </fieldset>
+</form>
+
+<br />
+
+<script type="text/javascript">
+/* <![CDATA[ */
+
+YAHOO.util.Event.onContentReady("filter_fieldset", function () {
+    var myButtonGroup = new YAHOO.widget.ButtonGroup("status_button");
+});
 
 
-<p>
-  Queue: $current_seed_files files
-</p>
+YAHOO.util.Event.onContentReady("network_id", function () {
+    var args = ['foo','bar'];
+    var responseSuccess = function(o){
+        
+        var onMenuItemClick = function (p_sType, p_aArgs, p_oItem) {
+            var sText = p_oItem.cfg.getProperty("text");
+            alert("[MenuItem Properties] text: " + sText + ", value: " + p_oItem.value);
+        };
+        
+        var aSplitButton5Menu = [
+            { text: "*", value: "", onclick: { fn: onMenuItemClick } },
+            { text: "Two", value: 2, onclick: { fn: onMenuItemClick } },
+            { text: "Three", value: 3, onclick: { fn: onMenuItemClick } }
+        ];
+        
+        var network_id_button = new YAHOO.widget.Button({
+            type: "split",  
+            label: "Split Button 5", 
+            name: "splitbutton5", 
+            menu: aSplitButton5Menu, 
+            container: this });
+        
+    };
+    var responseFailure = function(o){
+        alert('muh');
+    }
+    var callback =
+    {
+        success:responseSuccess,
+        failure:responseFailure,
+        argument:args
+    };
+    var url = "/seismology/waveform/getNetworkIds?format=json";
+    YAHOO.util.Connect.asyncRequest('GET', url, callback);
+});
+
+/* ]]> */
+</script>
