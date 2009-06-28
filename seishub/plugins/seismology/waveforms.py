@@ -94,6 +94,10 @@ class WaveformLatencyMapper(Component):
     mapping_url = '/seismology/waveform/getLatency'
 
     def process_GET(self, request):
+        network_id = request.args0.get('network_id', None)
+        station_id = request.args0.get('station_id', None)
+        location_id = request.args0.get('location_id', None)
+        channel_id = request.args0.get('channel_id', None)
         columns = [
             miniseed_tab.c['network_id'], miniseed_tab.c['station_id'],
             miniseed_tab.c['location_id'], miniseed_tab.c['channel_id'],
@@ -104,6 +108,14 @@ class WaveformLatencyMapper(Component):
             miniseed_tab.c['location_id'], miniseed_tab.c['channel_id']]
         # build up query
         query = sql.select(columns, group_by=group_by, order_by=group_by)
+        if network_id:
+            query = query.where(miniseed_tab.c['network_id'] == network_id)
+        if station_id:
+            query = query.where(miniseed_tab.c['station_id'] == station_id)
+        if location_id:
+            query = query.where(miniseed_tab.c['location_id'] == location_id)
+        if channel_id:
+            query = query.where(miniseed_tab.c['channel_id'] == channel_id)
         # execute query
         try:
             results = request.env.db.query(query)
