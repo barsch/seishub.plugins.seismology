@@ -4,8 +4,11 @@ Seismology package for SeisHub.
 """
 
 from seishub.core import Component, implements
+from seishub.db.util import querySingleColumn, formatResults
 from seishub.packages.interfaces import IAdminPanel, IMapper
-from seishub.db.util import querySingleColumn
+from seishub.registry.defaults import miniseed_tab
+from sqlalchemy import sql, Column, DateTime
+import datetime
 import os
 
 
@@ -80,6 +83,33 @@ class WaveformChannelIDMapper(Component):
         kwargs['location_id'] = request.args0.get('location_id', None)
         return querySingleColumn(request, 'default_miniseed', 'channel_id',
                                  **kwargs)
+
+
+class WaveformLatencyMapper(Component):
+    """
+    Generates a list of latency values for each channel.
+    """
+    implements(IMapper)
+
+    mapping_url = '/seismology/waveform/getLatency'
+
+    def process_GET(self, request):
+        columns = [
+            miniseed_tab.c['network_id'], miniseed_tab.c['station_id'],
+            miniseed_tab.c['location_id'], miniseed_tab.c['channel_id'],
+            (datetime.datetime.utcnow() -
+             sql.func.max(miniseed_tab.c['end_datetime'])).label('latency')]
+        group_by = [
+            miniseed_tab.c['network_id'], miniseed_tab.c['station_id'],
+            miniseed_tab.c['location_id'], miniseed_tab.c['channel_id']]
+        # build up query
+        query = sql.select(columns, group_by=group_by, order_by=group_by)
+        # execute query
+        try:
+            results = request.env.db.query(query)
+        except:
+            results = []
+        return formatResults(request, results)
 
 
 class WaveformCutterMapper(Component):
