@@ -132,45 +132,44 @@ class WaveformCutterMapper(Component):
     mapping_url = '/seismology/waveform/getWaveform'
 
     def process_GET(self, request):
-        data = {}
-        try:
-            network_id = request.args0.get('network_id')
-            station_id = request.args0.get('station_id')
-            location_id = request.args0.get('location_id', '')
-            channel_id = request.args0.get('channel_id')
-        except:
-            return ''
+        network_id = request.args0.get('network_id', None)
+        station_id = request.args0.get('station_id', None)
+        location_id = request.args0.get('location_id', None)
+        channel_id = request.args0.get('channel_id', None)
 
-        from seishub.core.util import UTCDateTime
+        from obspy.core.util import UTCDateTime
         try:
             start = request.args0.get('start_datetime')
+            end = UTCDateTime(start)
         except:
             start = UTCDateTime()
         try:
             end = request.args0.get('end_datetime')
             end = UTCDateTime(end)
         except:
-            end = start - 60 * 5
+            end = start - (60 * 10)
 
         # build up query
         columns = [miniseed_tab.c['path'], miniseed_tab.c['file']]
-        query = sql.select(columns, group_by=group_by, order_by=group_by)
+        query = sql.select(columns)
         query = query.where(miniseed_tab.c['network_id'] == network_id)
         query = query.where(miniseed_tab.c['station_id'] == station_id)
         query = query.where(miniseed_tab.c['location_id'] == location_id)
         query = query.where(miniseed_tab.c['channel_id'] == channel_id)
-        query = query.where(miniseed_tab.c['start_datetime'] >= start.datetime)
-        query = query.where(miniseed_tab.c['end_datetime'] <= end.datetime)
+        query = query.where(miniseed_tab.c['end_datetime'] >= start.datetime)
+        query = query.where(miniseed_tab.c['start_datetime'] <= end.datetime)
 
         # execute query
         try:
-            results = request.env.db.query(query)
+            results = request.env.db.query(query).fetchall()
         except:
             results = []
-        import pdb;pdb.set_trace()
+        file_list = []
+        for result in results:
+            file_list.append(result[0] + os.sep + result[1])
         from obspy.mseed import libmseed
         ms = libmseed()
-        data = ms.mergeAndCutMSFiles(file_list, start_datetime, end_datetime)
+        data = ms.mergeAndCutMSFiles(file_list, start, end)
         return data
 
 
