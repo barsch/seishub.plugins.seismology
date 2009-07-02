@@ -170,6 +170,8 @@ class WaveformCutterMapper(Component):
         from obspy.mseed import libmseed
         ms = libmseed()
         data = ms.mergeAndCutMSFiles(file_list, start, end)
+        # generate correct header
+        request.setHeader('content-type', 'binary/octet-stream')
         return data
 
 
