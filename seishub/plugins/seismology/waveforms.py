@@ -133,9 +133,44 @@ class WaveformCutterMapper(Component):
 
     def process_GET(self, request):
         data = {}
+        try:
+            network_id = request.args0.get('network_id')
+            station_id = request.args0.get('station_id')
+            location_id = request.args0.get('location_id', '')
+            channel_id = request.args0.get('channel_id')
+        except:
+            return ''
+
+        from seishub.core.util import UTCDateTime
+        try:
+            start = request.args0.get('start_datetime')
+        except:
+            start = UTCDateTime()
+        try:
+            end = request.args0.get('end_datetime')
+            end = UTCDateTime(end)
+        except:
+            end = start - 60 * 5
+
+        # build up query
+        columns = [miniseed_tab.c['path'], miniseed_tab.c['file']]
+        query = sql.select(columns, group_by=group_by, order_by=group_by)
+        query = query.where(miniseed_tab.c['network_id'] == network_id)
+        query = query.where(miniseed_tab.c['station_id'] == station_id)
+        query = query.where(miniseed_tab.c['location_id'] == location_id)
+        query = query.where(miniseed_tab.c['channel_id'] == channel_id)
+        query = query.where(miniseed_tab.c['start_datetime'] >= start.datetime)
+        query = query.where(miniseed_tab.c['end_datetime'] <= end.datetime)
+
+        # execute query
+        try:
+            results = request.env.db.query(query)
+        except:
+            results = []
+        import pdb;pdb.set_trace()
         from obspy.mseed import libmseed
         ms = libmseed()
-        #ms.mergeAndCutMSFiles(file_list, outfile, starttime, endtime)
+        data = ms.mergeAndCutMSFiles(file_list, start_datetime, end_datetime)
         return data
 
 
