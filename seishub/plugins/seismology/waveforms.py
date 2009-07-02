@@ -140,7 +140,7 @@ class WaveformCutterMapper(Component):
         from obspy.core.util import UTCDateTime
         try:
             start = request.args0.get('start_datetime')
-            end = UTCDateTime(start)
+            start = UTCDateTime(start)
         except:
             start = UTCDateTime()
         try:
