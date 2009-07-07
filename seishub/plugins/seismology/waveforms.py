@@ -156,8 +156,8 @@ class WaveformCutterMapper(Component):
         query = query.where(miniseed_tab.c['station_id'] == station_id)
         query = query.where(miniseed_tab.c['location_id'] == location_id)
         query = query.where(miniseed_tab.c['channel_id'] == channel_id)
-        query = query.where(miniseed_tab.c['end_datetime'] >= start.datetime)
-        query = query.where(miniseed_tab.c['start_datetime'] <= end.datetime)
+        query = query.where(miniseed_tab.c['end_datetime'] > start.datetime)
+        query = query.where(miniseed_tab.c['start_datetime'] < end.datetime)
 
         # execute query
         try:
