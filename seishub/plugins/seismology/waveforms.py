@@ -3,11 +3,13 @@
 Seismology package for SeisHub.
 """
 
+from obspy.core.util import UTCDateTime
+from obspy.mseed import libmseed
 from seishub.core import Component, implements
 from seishub.db.util import querySingleColumn, formatResults
 from seishub.packages.interfaces import IAdminPanel, IMapper
 from seishub.registry.defaults import miniseed_tab
-from sqlalchemy import sql, Column, DateTime
+from sqlalchemy import sql
 import datetime
 import os
 
@@ -94,10 +96,7 @@ class WaveformLatencyMapper(Component):
     mapping_url = '/seismology/waveform/getLatency'
 
     def process_GET(self, request):
-        network_id = request.args0.get('network_id', None)
-        station_id = request.args0.get('station_id', None)
-        location_id = request.args0.get('location_id', None)
-        channel_id = request.args0.get('channel_id', None)
+        # process parameters
         columns = [
             miniseed_tab.c['network_id'], miniseed_tab.c['station_id'],
             miniseed_tab.c['location_id'], miniseed_tab.c['channel_id'],
@@ -108,14 +107,16 @@ class WaveformLatencyMapper(Component):
             miniseed_tab.c['location_id'], miniseed_tab.c['channel_id']]
         # build up query
         query = sql.select(columns, group_by=group_by, order_by=group_by)
-        if network_id:
-            query = query.where(miniseed_tab.c['network_id'] == network_id)
-        if station_id:
-            query = query.where(miniseed_tab.c['station_id'] == station_id)
-        if location_id:
-            query = query.where(miniseed_tab.c['location_id'] == location_id)
-        if channel_id:
-            query = query.where(miniseed_tab.c['channel_id'] == channel_id)
+        for col in ['network_id', 'station_id', 'location_id', 'channel_id']:
+            text = request.args0.get(col, None)
+            if not text:
+                continue
+            if '*' in text or '?' in text:
+                text = text.replace('?', '_')
+                text = text.replace('*', '%')
+                query = query.where(miniseed_tab.c[col].like(text))
+            else:
+                query = query.where(miniseed_tab.c[col] == text)
         # execute query
         try:
             results = request.env.db.query(query)
@@ -132,12 +133,7 @@ class WaveformCutterMapper(Component):
     mapping_url = '/seismology/waveform/getWaveform'
 
     def process_GET(self, request):
-        network_id = request.args0.get('network_id', None)
-        station_id = request.args0.get('station_id', None)
-        location_id = request.args0.get('location_id', None)
-        channel_id = request.args0.get('channel_id', None)
-
-        from obspy.core.util import UTCDateTime
+        # process parameters
         try:
             start = request.args0.get('start_datetime')
             start = UTCDateTime(start)
@@ -147,18 +143,26 @@ class WaveformCutterMapper(Component):
             end = request.args0.get('end_datetime')
             end = UTCDateTime(end)
         except:
-            end = start - (60 * 10)
-
+            # 10 minutes
+            end = start + (60 * 10)
+        # limit time span to maximal 6 hours
+        if end - start > 60 * 60 * 6:
+            end = start + 60 * 60 * 6
         # build up query
         columns = [miniseed_tab.c['path'], miniseed_tab.c['file']]
         query = sql.select(columns)
-        query = query.where(miniseed_tab.c['network_id'] == network_id)
-        query = query.where(miniseed_tab.c['station_id'] == station_id)
-        query = query.where(miniseed_tab.c['location_id'] == location_id)
-        query = query.where(miniseed_tab.c['channel_id'] == channel_id)
+        for col in ['network_id', 'station_id', 'location_id', 'channel_id']:
+            text = request.args0.get(col, None)
+            if not text:
+                continue
+            if '*' in text or '?' in text:
+                text = text.replace('?', '_')
+                text = text.replace('*', '%')
+                query = query.where(miniseed_tab.c[col].like(text))
+            else:
+                query = query.where(miniseed_tab.c[col] == text)
         query = query.where(miniseed_tab.c['end_datetime'] > start.datetime)
         query = query.where(miniseed_tab.c['start_datetime'] < end.datetime)
-
         # execute query
         try:
             results = request.env.db.query(query).fetchall()
@@ -167,7 +171,6 @@ class WaveformCutterMapper(Component):
         file_list = []
         for result in results:
             file_list.append(result[0] + os.sep + result[1])
-        from obspy.mseed import libmseed
         ms = libmseed()
         data = ms.mergeAndCutMSFiles(file_list, start, end)
         # generate correct header

@@ -126,4 +126,4 @@ class SeismicEventResourceType(Component):
                   '/event/focalMechanism/momentTensor/tensor/Mtp/value',
                   'numeric')
     registerIndex('event_type', '/event/type', 'text')
-    registerIndex('localisation_method', '/event/event_type', 'text')
+    registerIndex('localisation_method', '/event/event_type/value', 'text')

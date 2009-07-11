@@ -2,10 +2,9 @@
 """
 """
 
-from lxml.etree import Element, SubElement as Sub
 from seishub.core import Component, implements
+from seishub.db.util import formatResults
 from seishub.packages.interfaces import IAdminPanel, IMapper
-from seishub.util.xmlwrapper import toString
 from sqlalchemy import sql
 import os
 
@@ -78,25 +77,25 @@ class StationsPanel(Component):
         return result
 
 
-class StationsMapper(Component):
+class StationListMapper(Component):
     """
     """
     implements(IMapper)
 
     package_id = 'seismology'
-    mapping_url = '/seismology/station/getStationList'
+    mapping_url = '/seismology/station/getList'
 
     def process_GET(self, request):
         # parse input arguments
-        network_id = request.args0.get('network_id', '')
-        station_id = request.args0.get('station_id', '')
         status = request.args0.get('status', '')
         all = request.args0.get('all', False)
         try:
             offset = int(request.args0.get('offset', 0))
-            limit = int(request.args0.get('limit', 20))
         except:
-            offset = 0
+            offset = None
+        try:
+            limit = int(request.args0.get('limit', None))
+        except:
             limit = None
         # filter indexes
         catalog = self.env.catalog.index_catalog
@@ -111,27 +110,30 @@ class StationsMapper(Component):
         # build up query
         query, joins = catalog._createIndexView(xmlindex_list, compact=False)
         query = query.select_from(joins)
-        if network_id != '':
-            query = query.where(
-                sql.literal_column('network_id.keyval') == network_id)
-        if station_id != '':
-            query = query.where(
-                sql.literal_column('station_id.keyval') == station_id)
+        for col in ['network_id', 'station_id', 'location_id', 'channel_id']:
+            text = request.args0.get(col, None)
+            if not text:
+                continue
+            column = sql.literal_column(col + '.keyval')
+            if '*' in text or '?' in text:
+                text = text.replace('?', '_')
+                text = text.replace('*', '%')
+
+                query = query.where(column.like(text))
+            else:
+                query = query.where(column == text)
         if status == 'active':
             query = query.where(
                 sql.literal_column('end_datetime.keyval') == None)
         elif status == 'inactive':
             query = query.where(
                 sql.literal_column('end_datetime.keyval') != None)
-
         # count all possible results
         try:
             results = self.env.db.query(query).fetchall()
             count = len(results)
         except:
             count = 0
-        # generate XML result
-        xml = Element("query", total_results=str(count))
         # execute query
         query = query.order_by(sql.literal_column('network_id.keyval'))
         query = query.order_by(sql.literal_column('station_id.keyval'))
@@ -142,18 +144,9 @@ class StationsMapper(Component):
         query = query.offset(offset).limit(limit)
         if limit:
             query = query.limit(limit)
+        # execute query
         try:
-            results = self.env.db.query(query).fetchall()
-            if not results:
-                return toString(xml)
+            results = request.env.db.query(query)
         except:
-            return toString(xml)
-        # cycle over results
-        xml.attrib['results_returned'] = str(len(results))
-        for result in results:
-            s = Sub(xml, "resource")
-            for (key, value) in dict(result).iteritems():
-                if value == None:
-                    value = ''
-                Sub(s, key).text = str(value)
-        return toString(xml)
+            results = []
+        return formatResults(request, results, count=count, offset=offset)

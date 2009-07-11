@@ -88,7 +88,7 @@ YAHOO.example.DynamicData = function() {
     // Set initial request
     var initialRequest = "offset=0&limit=20"
     var info = '<a target="_blank" href="/xml/seismology/station/'
-    var url = "/seismology/station/getStationList?network_id=$network_id" +
+    var url = "/seismology/station/getList?network_id=$network_id" +
               "&station_id=$station_id&"
     var status_list = ['', 'active', 'inactive'];
     
@@ -116,7 +116,7 @@ YAHOO.example.DynamicData = function() {
     YAHOO.util.DataSource(url);
     myDS.responseType = YAHOO.util.DataSource.TYPE_XML;
     myDS.responseSchema = {
-        resultNode: "resource", 
+        resultNode: "Item", 
         fields: [
             {key:"network_id"},
             {key:"station_id"},
@@ -130,8 +130,8 @@ YAHOO.example.DynamicData = function() {
         ],
         metaNode : "query",
         metaFields: {
-            totalResultsAvailable : "total_results", 
-            totalResultsReturned : "results_returned",
+            totalResultsAvailable : "totalResultsAvailable", 
+            totalResultsReturned : "totalResultsReturned",
         }
     };
     
