@@ -155,7 +155,7 @@ class WaveformCutterMapper(Component):
             text = request.args0.get(col, None)
             if not text:
                 continue
-            if '*' in text or '?' in text:
+            if col == 'channel_id' and '*' in text or '?' in text:
                 text = text.replace('?', '_')
                 text = text.replace('*', '%')
                 query = query.where(miniseed_tab.c[col].like(text))
@@ -168,11 +168,14 @@ class WaveformCutterMapper(Component):
             results = request.env.db.query(query).fetchall()
         except:
             results = []
-        file_list = []
-        for result in results:
-            file_list.append(result[0] + os.sep + result[1])
         ms = libmseed()
-        data = ms.mergeAndCutMSFiles(file_list, start, end)
+        file_dict = {}
+        for result in results:
+            fname = result[0] + os.sep + result[1]
+            file_dict.setdefault(result[0], []).append(fname)
+        data = ''
+        for id in file_dict.keys():
+            data += ms.mergeAndCutMSFiles(file_dict[id], start, end)
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
         return data
