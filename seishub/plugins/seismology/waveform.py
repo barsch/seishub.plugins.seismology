@@ -157,7 +157,7 @@ class WaveformCutterMapper(Component):
             text = request.args0.get(col, None)
             if not text:
                 continue
-            if col == 'channel_id' and '*' in text or '?' in text:
+            if '*' in text or '?' in text:
                 text = text.replace('?', '_')
                 text = text.replace('*', '%')
                 query = query.where(miniseed_tab.c[col].like(text))
