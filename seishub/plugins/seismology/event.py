@@ -11,7 +11,7 @@ from sqlalchemy import Table, sql
 import os
 
 
-class EventsPanel(Component):
+class EventPanel(Component):
     """
     """
     implements(IAdminPanel)
@@ -92,3 +92,45 @@ class EventListMapper(Component):
             count = 0
         return formatResults(request, results, limit=limit, offset=offset,
                              count=count)
+
+
+class BeachballMapper(Component):
+    """
+    Returns a beachball image for the given parameters.
+    """
+    implements(IMapper)
+
+    package_id = 'seismology'
+    mapping_url = '/seismology/event/plotBeachball'
+
+    def process_GET(self, request):
+        from obspy.imaging.beachball import Beachball
+        # parse input arguments
+        try:
+            fm = request.args0.get('fm', '235, 80, 35')
+            size = int(request.args0.get('size', 100))
+            alpha = float(request.args0.get('alpha', 0.8))
+            linewidth = float(request.args0.get('linewidth', 2))
+            # try to parse fm
+            if fm.count(',') == 2:
+                fm = fm.split(',')
+                fm = [float(fm[0]), float(fm[1]), float(fm[2])]
+            elif fm.count(',') == 5:
+                fm = fm.split(',')
+                fm = [float(fm[0]), float(fm[1]), float(fm[2]),
+                      float(fm[3]), float(fm[4]), float(fm[5])]
+            else:
+                return ''
+        except:
+            return ''
+        if alpha < 0 or alpha > 1:
+            alpha = 1
+        if linewidth < 0 or linewidth > 10:
+            linewidth = 2
+        if size < 100 or size > 1000:
+            size = 100
+        # generate correct header
+        request.setHeader('content-type', 'image/svg+xml; charset=UTF-8')
+        # create beachball
+        return Beachball(fm, size, format='svg', alpha=alpha,
+                         linewidth=linewidth)

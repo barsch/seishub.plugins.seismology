@@ -9,7 +9,7 @@ from sqlalchemy import sql
 import os
 
 
-class StationsPanel(Component):
+class StationPanel(Component):
     """
     """
     implements(IAdminPanel)

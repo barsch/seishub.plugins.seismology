@@ -14,7 +14,7 @@ import datetime
 import os
 
 
-class WaveformsPanel(Component):
+class WaveformPanel(Component):
     """
     """
     implements(IAdminPanel)
