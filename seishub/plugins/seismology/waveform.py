@@ -138,13 +138,13 @@ class WaveformCutterMapper(Component):
             start = request.args0.get('start_datetime')
             start = UTCDateTime(start)
         except:
-            start = UTCDateTime()
+            start = UTCDateTime() - 60 * 20
         try:
             end = request.args0.get('end_datetime')
             end = UTCDateTime(end)
         except:
             # 10 minutes
-            end = start + (60 * 10)
+            end = UTCDateTime()
         # limit time span to maximal 6 hours
         if end - start > 60 * 60 * 6:
             end = start + 60 * 60 * 6
