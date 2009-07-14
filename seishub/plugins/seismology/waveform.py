@@ -149,7 +149,9 @@ class WaveformCutterMapper(Component):
         if end - start > 60 * 60 * 6:
             end = start + 60 * 60 * 6
         # build up query
-        columns = [miniseed_tab.c['path'], miniseed_tab.c['file']]
+        columns = [miniseed_tab.c['path'], miniseed_tab.c['file'],
+                   miniseed_tab.c['network_id'], miniseed_tab.c['station_id'],
+                   miniseed_tab.c['location_id'], miniseed_tab.c['channel_id']]
         query = sql.select(columns)
         for col in ['network_id', 'station_id', 'location_id', 'channel_id']:
             text = request.args0.get(col, None)
@@ -172,7 +174,8 @@ class WaveformCutterMapper(Component):
         file_dict = {}
         for result in results:
             fname = result[0] + os.sep + result[1]
-            file_dict.setdefault(result[0], []).append(fname)
+            key = '%s.%s.%s.%s' % (result[2], result[3], result[4], result[5])
+            file_dict.setdefault(key, []).append(fname)
         data = ''
         for id in file_dict.keys():
             data += ms.mergeAndCutMSFiles(file_dict[id], start, end)
