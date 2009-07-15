@@ -2,10 +2,11 @@
 """
 """
 
+from obspy.core.util import UTCDateTime
 from seishub.core import Component, implements
 from seishub.db.util import formatResults
 from seishub.packages.interfaces import IAdminPanel, IMapper
-from sqlalchemy import sql
+from sqlalchemy import sql, Table
 import os
 
 
@@ -87,66 +88,66 @@ class StationListMapper(Component):
 
     def process_GET(self, request):
         # parse input arguments
-        status = request.args0.get('status', '')
-        all = request.args0.get('all', False)
+        tab = Table('/seismology/station', request.env.db.metadata,
+                    autoload=True)
+        # fetch arguments
         try:
+            limit = int(request.args0.get('limit'))
             offset = int(request.args0.get('offset', 0))
         except:
-            offset = None
-        try:
-            limit = int(request.args0.get('limit', None))
-        except:
             limit = None
-        # filter indexes
-        catalog = self.env.catalog.index_catalog
-        xmlindex_list = catalog.getIndexes('seismology', 'station')[::-1]
-        if not all:
-            filter = ['latitude', 'longitude', 'start_datetime',
-                      'end_datetime', 'station_id', 'network_id',
-                      'station_name', 'elevation']
-            xmlindex_list = [x for x in xmlindex_list if x.label in filter]
-        if not xmlindex_list:
-            return
+            offset = 0
+        oncl = sql.and_(1 == 1)
         # build up query
-        query, joins = catalog._createIndexView(xmlindex_list, compact=False)
-        query = query.select_from(joins)
+        columns = [tab.c['document_id'], tab.c['package_id'],
+                   tab.c['resourcetype_id'], tab.c['resource_name'],
+                   tab.c['station_name'], tab.c['network_id'],
+                   tab.c['station_id'], tab.c['longitude'], tab.c['elevation'],
+                   tab.c['latitude'], tab.c['quality'],
+                   tab.c['start_datetime'], tab.c['end_datetime']]
+        query = sql.select(columns, oncl, limit=limit, distinct=True,
+                           offset=offset, order_by=tab.c['start_datetime'])
+        # process arguments
+        # datetime
+        try:
+            datetime = UTCDateTime(request.args0.get('datetime')).datetime
+            query = query.where(tab.c['datetime'] <= datetime)
+            query = query.where(
+                sql.or_(tab.c['datetime'] <= datetime,
+                        tab.c['datetime'] == None))
+        except:
+            pass
+        # status
+        try:
+            status = request.args0.get('status')
+            if status == 'active':
+                query = query.where(tab.c['end_datetime'] == None)
+            elif status == 'inactive':
+                query = query.where(tab.c['end_datetime'] != None)
+        except:
+            pass
+        # network, station, location. channel
         for col in ['network_id', 'station_id', 'location_id', 'channel_id']:
             text = request.args0.get(col, None)
             if not text:
                 continue
-            column = sql.literal_column(col + '.keyval')
             if '*' in text or '?' in text:
                 text = text.replace('?', '_')
                 text = text.replace('*', '%')
-
-                query = query.where(column.like(text))
+                query = query.where(tab.c[col].like(text))
             else:
-                query = query.where(column == text)
-        if status == 'active':
-            query = query.where(
-                sql.literal_column('end_datetime.keyval') == None)
-        elif status == 'inactive':
-            query = query.where(
-                sql.literal_column('end_datetime.keyval') != None)
-        # count all possible results
-        try:
-            results = self.env.db.query(query).fetchall()
-            count = len(results)
-        except:
-            count = 0
-        # execute query
-        query = query.order_by(sql.literal_column('network_id.keyval'))
-        query = query.order_by(sql.literal_column('station_id.keyval'))
-        if all:
-            query = query.order_by(sql.literal_column('location_id.keyval'))
-            query = query.order_by(sql.literal_column('channel_id.keyval'))
-        query = query.order_by(sql.literal_column('start_datetime.keyval'))
-        query = query.offset(offset).limit(limit)
-        if limit:
-            query = query.limit(limit)
+                query = query.where(tab.c[col] == text)
         # execute query
         try:
             results = request.env.db.query(query)
         except:
             results = []
-        return formatResults(request, results, count=count, offset=offset)
+        # count all distinct values
+        query = sql.select([sql.func.count(tab.c['document_id'].distinct())])
+        # execute query
+        try:
+            count = request.env.db.query(query).fetchone()[0]
+        except:
+            count = 0
+        return formatResults(request, results, limit=limit, offset=offset,
+                             count=count)
