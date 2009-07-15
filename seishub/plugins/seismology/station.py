@@ -111,10 +111,10 @@ class StationListMapper(Component):
         # datetime
         try:
             datetime = UTCDateTime(request.args0.get('datetime')).datetime
-            query = query.where(tab.c['datetime'] <= datetime)
+            query = query.where(tab.c['start_datetime'] <= datetime)
             query = query.where(
-                sql.or_(tab.c['datetime'] <= datetime,
-                        tab.c['datetime'] == None))
+                sql.or_(tab.c['end_datetime'] >= datetime,
+                        tab.c['end_datetime'] == None))
         except:
             pass
         # status
