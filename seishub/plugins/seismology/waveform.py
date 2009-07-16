@@ -181,6 +181,8 @@ class WaveformCutterMapper(Component):
             data += ms.mergeAndCutMSFiles(file_dict[id], start, end)
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
+        # disable content encoding like packing!
+        request.getHeader("accept-encoding", "")
         return data
 
 
