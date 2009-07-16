@@ -182,7 +182,7 @@ class WaveformCutterMapper(Component):
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
         # disable content encoding like packing!
-        request.getHeader("accept-encoding", "")
+        request.setHeader("accept-encoding", "")
         return data
 
 
