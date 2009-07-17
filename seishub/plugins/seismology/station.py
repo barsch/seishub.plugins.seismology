@@ -2,7 +2,7 @@
 """
 """
 
-from obspy.core.util import UTCDateTime
+from obspy.core import UTCDateTime
 from seishub.core import Component, implements
 from seishub.db.util import formatResults
 from seishub.packages.interfaces import IAdminPanel, IMapper
