@@ -47,6 +47,11 @@ class EventListMapper(Component):
         query = sql.select([tab], oncl, limit=limit, offset=offset)
         # process arguments
         try:
+            temp = request.args0.get('localisation_method')
+            query = query.where(tab.c['localisation_method'] == temp)
+        except:
+            pass
+        try:
             temp = UTCDateTime(request.args0.get('datetime'))
             query = query.where(tab.c['datetime'] == temp.datetime)
         except:
