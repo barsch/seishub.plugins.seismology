@@ -2,6 +2,7 @@
 """
 """
 
+from StringIO import StringIO
 from obspy.core import UTCDateTime
 from seishub.core import Component, implements
 from seishub.db.util import formatResults
@@ -151,3 +152,62 @@ class StationListMapper(Component):
             count = 0
         return formatResults(request, results, limit=limit, offset=offset,
                              count=count)
+
+
+class DatalessMapper(Component):
+    """
+    """
+    implements(IMapper)
+
+    package_id = 'seismology'
+    mapping_url = '/seismology/station/dataless'
+
+    def process_GET(self, request):
+        # parse input arguments
+        tab = Table('/seismology/station', request.env.db.metadata,
+                    autoload=True)
+        # process post path
+        if len(request.postpath) == 1:
+            # got a resource request
+            res_name = str(request.postpath[0])
+            # build up query
+            columns = [tab.c['document_id']]
+            query = sql.select(columns, distinct=True)
+            query = query.where(tab.c['resource_name'] == res_name)
+            # execute query
+            try:
+                results = request.env.db.query(query)
+                doc_id = results.fetchall()[0][0]
+            except:
+                pass
+            else:
+                # ok we got a document id - fetch it and transform it
+                res = self.env.catalog.getResource(document_id=doc_id)
+                data = StringIO(res.document.data)
+                try:
+                    from obspy.xseed.parser import Parser
+                    p = Parser()
+                    p.parseXSEED(data)
+                    seed_doc = p.getSEED()
+                except:
+                    pass
+                else:
+                    # generate correct header
+                    request.setHeader('content-type',
+                        'application/octet-stream')
+                    # set file name
+                    request.setHeader('Content-Disposition',
+                        'attachment; filename=%s.dataless' % res_name)
+                    return seed_doc
+
+
+        # ok its not a single resource - show all available resources
+        # build up query
+        columns = [tab.c['resource_name']]
+        query = sql.select(columns, distinct=True)
+        # execute query
+        try:
+            results = request.env.db.query(query)
+        except:
+            results = []
+        return formatResults(request, results)
