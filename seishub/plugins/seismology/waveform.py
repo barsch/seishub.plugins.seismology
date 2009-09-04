@@ -7,6 +7,7 @@ from obspy.core import UTCDateTime
 from obspy.mseed import libmseed
 from seishub.core import Component, implements
 from seishub.db.util import querySingleColumn, formatResults
+from seishub.exceptions import InternalServerError
 from seishub.packages.interfaces import IAdminPanel, IMapper
 from seishub.registry.defaults import miniseed_tab
 from sqlalchemy import sql
@@ -170,6 +171,11 @@ class WaveformCutterMapper(Component):
             results = request.env.db.query(query).fetchall()
         except:
             results = []
+        # check for results
+        if len(results) == 0:
+            # ok lets use arclink
+            return self._fetchFromArclink(request, start, end)
+        # get from local waveform archive
         ms = libmseed()
         file_dict = {}
         for result in results:
@@ -185,4 +191,57 @@ class WaveformCutterMapper(Component):
         request.received_headers["accept-encoding"] = ""
         return data
 
+    def _fetchFromArclink(self, request, start, end):
+        """
+        """
+        try:
+            from obspy.arclink.client import Client
+        except:
+            return ''
+        c = Client()
+        # parameters
+        nid = request.args0.get('network_id')
+        sid = request.args0.get('station_id')
+        lid = request.args0.get('location_id', '')
+        cid = request.args0.get('channel_id', '*')
+        try:
+            st = c.getWaveform(nid, sid, lid, cid, start, end)
+        except Exception, e:
+            raise InternalServerError(e)
+        # merge + cut
+        #st.merge()
+        st.trim(start, end)
+        # write to arclink directory for request
+        rpath = os.path.join(self.env.getSeisHubPath(), 'data', 'arclink')
+        rfile = os.path.join(rpath, 'request%d' % UTCDateTime().timestamp)
+        # XXX: args have to create temp files .... issue with obspy.mseed, or
+        # actually issue with ctypes not accepting StringIO as filehandler ...
+        st.write(rfile, format='MSEED')
+        # write to arclink directory
+        for tr in st:
+            # network directory
+            path = os.path.join(rpath, tr.stats.network)
+            self._checkPath(path)
+            # station directory
+            path = os.path.join(path, tr.stats.station)
+            self._checkPath(path)
+            # channel directory
+            path = os.path.join(path, tr.stats.channel)
+            self._checkPath(path)
+            file = tr.getId() + '.%d.%d.mseed' % (tr.stats.starttime.timestamp,
+                                                  tr.stats.endtime.timestamp)
+            tr.write(os.path.join(path, file), format='MSEED')
+        # generate correct header
+        request.setHeader('content-type', 'binary/octet-stream')
+        # disable content encoding like packing!
+        request.received_headers["accept-encoding"] = ""
+        # XXX: again very ugly as not StringIO can be used ...
+        fh = open(rfile, 'rb')
+        data = fh.read()
+        fh.close()
+        os.remove(rfile)
+        return data
 
+    def _checkPath(self, path):
+        if not os.path.isdir(path):
+            os.mkdir(path)
