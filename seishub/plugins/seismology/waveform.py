@@ -15,17 +15,17 @@ import datetime
 import os
 
 
-class WaveformPanel(Component):
-    """
-    """
-    implements(IAdminPanel)
-
-    template = 'templates' + os.sep + 'waveforms.tmpl'
-    panel_ids = ('seismology', 'Seismology', 'waveforms', 'Waveforms')
-
-    def render(self, request):
-        data = {}
-        return data
+#class WaveformPanel(Component):
+#    """
+#    """
+#    implements(IAdminPanel)
+#
+#    template = 'templates' + os.sep + 'waveforms.tmpl'
+#    panel_ids = ('seismology', 'Seismology', 'waveforms', 'Waveforms')
+#
+#    def render(self, request):
+#        data = {}
+#        return data
 
 
 class WaveformNetworkIDMapper(Component):

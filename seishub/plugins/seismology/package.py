@@ -78,6 +78,7 @@ class SeismicEventResourceType(Component):
     resourcetype_id = 'event'
 
     registerStylesheet('xslt' + os.sep + 'event_metadata.xslt', 'metadata')
+    registerStylesheet('xslt' + os.sep + 'event_googlemaps_xhtml.xslt', 'map')
     registerStylesheet('xslt' + os.sep + 'seiscomp2earthworm.xslt', 'seiscomp')
 
     registerIndex('datetime',

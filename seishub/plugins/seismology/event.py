@@ -11,17 +11,17 @@ from sqlalchemy import Table, sql
 import os
 
 
-class EventPanel(Component):
-    """
-    """
-    implements(IAdminPanel)
-
-    template = 'templates' + os.sep + 'events.tmpl'
-    panel_ids = ('seismology', 'Seismology', 'events', 'Events')
-
-    def render(self, request):
-        data = {}
-        return data
+#class EventPanel(Component):
+#    """
+#    """
+#    implements(IAdminPanel)
+#
+#    template = 'templates' + os.sep + 'events.tmpl'
+#    panel_ids = ('seismology', 'Seismology', 'events', 'Events')
+#
+#    def render(self, request):
+#        data = {}
+#        return data
 
 
 class EventListMapper(Component):
