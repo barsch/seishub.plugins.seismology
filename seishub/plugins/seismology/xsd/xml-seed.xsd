@@ -14,8 +14,8 @@
       <xsd:element name="volume_index_control_header" type="volumeindexheader_type"/>
       <xsd:element name="abbreviation_dictionary_control_header" type="abbreviationdictionarycontrolheader_type"/>
       <xsd:group ref="station_control_headers_model_type" minOccurs="0" maxOccurs="unbounded"/>
-      <xsd:element name="timespan_control_header" type="timespancontrolheader_type" minOccurs="0" maxOccurs="unbounded"/>
-      <xsd:element name="data_records" type="data_records_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="timespan_control_header" type="timespancontrolheader_type"/>
+      <xsd:element name="data_records" type="data_records_type"/>
     </xsd:sequence>
     <xsd:attribute name="version" type="xsd:string"/>
   </xsd:complexType>
@@ -172,7 +172,7 @@
     <xsd:sequence>
       <xsd:element name="volume_identifier" type="blockette10_type"/>
       <xsd:element name="volume_station_header_index" type="blockette11_type"/>
-      <xsd:element name="volume_timespan_index" type="blockette12_type" minOccurs="0" maxOccurs="1"/>
+      <xsd:element name="volume_timespan_index" type="blockette12_type"/>
     </xsd:sequence>
   </xsd:complexType>
 
@@ -412,8 +412,8 @@
       <xsd:element name="latitude" type="xsd:double"/>
       <xsd:element name="longitude" type="xsd:double"/>
       <xsd:element name="elevation" type="xsd:double"/>
-      <xsd:element name="number_of_channels" type="xsd:long" minOccurs="0" maxOccurs="1" />
-      <xsd:element name="number_of_station_comments" type="xsd:long" minOccurs="0" maxOccurs="1" />
+      <xsd:element name="number_of_channels" type="xsd:long"/>
+      <xsd:element name="number_of_station_comments" type="xsd:long"/>
       <xsd:element name="site_name" type="xsd:string"/>
       <xsd:element name="network_identifier_code" type="xpathreference_type"/>
       <xsd:element name="word_order_32bit" type="xsd:string"/>
@@ -458,7 +458,7 @@
       <xsd:element name="azimuth" type="xsd:double"/>
       <xsd:element name="dip" type="xsd:double"/>
       <xsd:element name="data_format_identifier_code" type="xpathreference_type"/>
-      <xsd:element name="data_record_length" type="xsd:long"/>
+      <xsd:element name="data_recored_length" type="xsd:long"/>
       <xsd:element name="sample_rate" type="xsd:double"/>
       <xsd:element name="max_clock_drift" type="xsd:double"/>
       <xsd:element name="number_of_comments" type="xsd:long"/>
@@ -499,9 +499,9 @@
       <xsd:element name="signal_input_units" type="xpathreference_type"/>
       <xsd:element name="signal_output_units" type="xpathreference_type"/>
       <xsd:element name="number_of_numerators" type="xsd:long"/>
-      <xsd:element name="numerators" type="array_of_double" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="numerators" type="array_of_double"/>
       <xsd:element name="number_of_denominators" type="xsd:long"/>
-      <xsd:element name="denominators" type="array_of_double" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="denominators" type="array_of_double"/>
     </xsd:sequence>
     <xsd:attribute name="blockette" type="xsd:string" fixed="054"/>
   </xsd:complexType>
