@@ -4,12 +4,13 @@
 
 from StringIO import StringIO
 from obspy.core import UTCDateTime
+from obspy.xseed.parser import Parser
 from seishub.core import Component, implements
 from seishub.db.util import formatResults
 from seishub.packages.interfaces import IAdminPanel, IMapper
 from sqlalchemy import sql, Table
 import os
-
+import zipfile
 
 #class StationPanel(Component):
 #    """
@@ -190,9 +191,9 @@ class DatalessMapper(Component):
                 res = self.env.catalog.getResource(document_id=doc_id)
                 data = StringIO(res.document.data)
                 try:
-                    from obspy.xseed.parser import Parser
                     p = Parser()
                     p.read(data)
+                    import pdb;pdb.set_trace()
                     if format in ['resp', 'response']:
                         resp_list = p.getRESP()
                         # Create a ZIP archive.
@@ -228,7 +229,7 @@ class DatalessMapper(Component):
                         # set content type
                         request.setHeader('content-type', 'text/xml')
                 except:
-                    pass
+                    raise
                 else:
                     return result_doc
         # ok its not a single resource - show all available resources
