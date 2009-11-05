@@ -189,11 +189,9 @@ class DatalessMapper(Component):
             else:
                 # ok we got a document id - fetch it and transform it
                 res = self.env.catalog.getResource(document_id=doc_id)
-                data = StringIO(res.document.data)
                 try:
                     p = Parser()
-                    p.read(data)
-                    import pdb;pdb.set_trace()
+                    p.read(res.document.data)
                     if format in ['resp', 'response']:
                         resp_list = p.getRESP()
                         # Create a ZIP archive.
@@ -224,7 +222,7 @@ class DatalessMapper(Component):
                         result_doc = p.getXSEED()
                         # set file name
                         request.setHeader('Content-Disposition',
-                                          'attachment; filename=%s.dataless' \
+                                          'attachment; filename=%s' \
                                           % res_name)
                         # set content type
                         request.setHeader('content-type', 'text/xml')
