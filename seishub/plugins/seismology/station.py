@@ -156,6 +156,9 @@ class StationListMapper(Component):
 
 class DatalessMapper(Component):
     """
+    Returns a list of dataless station resources. 
+    
+    Use the format flag to request XML-SEED, Dataless SEED or SEED RESP files.
     """
     implements(IMapper)
 
@@ -170,6 +173,8 @@ class DatalessMapper(Component):
         if len(request.postpath) == 1:
             # got a resource request
             res_name = str(request.postpath[0])
+            # get format
+            format = request.args0.get('format', 'xseed').lower()
             # build up query
             columns = [tab.c['document_id']]
             query = sql.select(columns, distinct=True)
@@ -187,20 +192,45 @@ class DatalessMapper(Component):
                 try:
                     from obspy.xseed.parser import Parser
                     p = Parser()
-                    p.parseXSEED(data)
-                    seed_doc = p.getSEED()
+                    p.read(data)
+                    if format in ['resp', 'response']:
+                        resp_list = p.getRESP()
+                        # Create a ZIP archive.
+                        zip_fh = StringIO()
+                        zip_file = zipfile.ZipFile(zip_fh, "w")
+                        for response in resp_list:
+                            response[1].seek(0, 0)
+                            zip_file.writestr(response[0], response[1].read())
+                        zip_file.close()
+                        zip_fh.seek(0)
+                        result_doc = zip_fh.read()
+                        # set file name
+                        request.setHeader('Content-Disposition',
+                                          'attachment; filename=%s.zip' \
+                                          % res_name)
+                        # set content type
+                        request.setHeader('content-type', 'application/zip')
+                    elif format in ['seed', 'dataless']:
+                        result_doc = p.getSEED()
+                        # set file name
+                        request.setHeader('Content-Disposition',
+                                          'attachment; filename=%s.dataless' \
+                                          % res_name)
+                        # set content type
+                        request.setHeader('content-type',
+                                          'application/octet-stream')
+                    else:
+                        result_doc = p.getXSEED()
+                        # set file name
+                        request.setHeader('Content-Disposition',
+                                          'attachment; filename=%s.dataless' \
+                                          % res_name)
+                        # set content type
+                        request.setHeader('content-type', 'text/xml')
                 except:
                     pass
                 else:
-                    # generate correct header
-                    request.setHeader('content-type',
-                        'application/octet-stream')
-                    # set file name
-                    request.setHeader('Content-Disposition',
-                        'attachment; filename=%s.dataless' % res_name)
-                    return seed_doc
-
-
+                    return result_doc
         # ok its not a single resource - show all available resources
         # build up query
         columns = [tab.c['resource_name']]
