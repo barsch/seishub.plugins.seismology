@@ -21,7 +21,7 @@ class DatalessFormater(Component):
 
     package_id = "seismology"
     resourcetype_id = "station"
-    format_id = ["dataless"]
+    format_id = ["dataless", "seed"]
 
     @staticmethod
     def format(request, data, res_name):
@@ -32,7 +32,7 @@ class DatalessFormater(Component):
             p.read(data)
             result = p.getSEED()
         except:
-            raise
+            return data
         # set file name
         request.setHeader('Content-Disposition',
                           'attachment; filename=%s.dataless' \
@@ -42,6 +42,55 @@ class DatalessFormater(Component):
                           'application/octet-stream')
         return result
 
+
+class RESPFormater(Component):
+    """
+    RESP representation of a seismic station resource.
+    """
+    implements(IResourceFormater)
+
+    package_id = "seismology"
+    resourcetype_id = "station"
+    format_id = ["resp", "response"]
+
+    @staticmethod
+    def format(request, data, res_name):
+        """
+        """
+        channel = str(request.args0.get('channel', '')).upper()
+        try:
+            p = Parser()
+            p.read(data)
+            resp_list = p.getRESP()
+            # Create a ZIP archive.
+            zip_fh = StringIO()
+            if channel == '':
+                zip_file = zipfile.ZipFile(zip_fh, "w")
+                for response in resp_list:
+                    response[1].seek(0, 0)
+                    zip_file.writestr(response[0], response[1].read())
+                zip_file.close()
+                zip_fh.seek(0)
+                data = zip_fh.read()
+                res_name += os.extsep + "zip"
+            else:
+                for response in resp_list:
+                    if response[0][-3:] != channel:
+                        continue
+                    response[1].seek(0, 0)
+                    data = response[1].read()
+                    res_name = response[0]
+                    break
+
+        except:
+            return data
+        if channel == '':
+            # set content type
+            request.setHeader('content-type', 'application/zip')
+        # set file name
+        request.setHeader('Content-Disposition',
+                         'attachment; filename=%s' % res_name)
+        return data
 
 #class StationPanel(Component):
 #    """
@@ -184,90 +233,3 @@ class StationListMapper(Component):
             count = 0
         return formatResults(request, results, limit=limit, offset=offset,
                              count=count)
-
-
-class DatalessMapper(Component):
-    """
-    Returns a list of dataless station resources. 
-    
-    Use the format flag to request XML-SEED, Dataless SEED or SEED RESP files.
-    """
-    implements(IMapper)
-
-    package_id = 'seismology'
-    mapping_url = '/seismology/station/dataless'
-
-    def process_GET(self, request):
-        # parse input arguments
-        tab = Table('/seismology/station', request.env.db.metadata,
-                    autoload=True)
-        # process post path
-        if len(request.postpath) == 1:
-            # got a resource request
-            res_name = str(request.postpath[0])
-            # get format
-            format = request.args0.get('format', 'xseed').lower()
-            # build up query
-            columns = [tab.c['document_id']]
-            query = sql.select(columns, distinct=True)
-            query = query.where(tab.c['resource_name'] == res_name)
-            # execute query
-            try:
-                results = request.env.db.query(query)
-                doc_id = results.fetchall()[0][0]
-            except:
-                pass
-            else:
-                # ok we got a document id - fetch it and transform it
-                res = self.env.catalog.getResource(document_id=doc_id)
-                try:
-                    p = Parser()
-                    p.read(res.document.data)
-                    if format in ['resp', 'response']:
-                        resp_list = p.getRESP()
-                        # Create a ZIP archive.
-                        zip_fh = StringIO()
-                        zip_file = zipfile.ZipFile(zip_fh, "w")
-                        for response in resp_list:
-                            response[1].seek(0, 0)
-                            zip_file.writestr(response[0], response[1].read())
-                        zip_file.close()
-                        zip_fh.seek(0)
-                        result_doc = zip_fh.read()
-                        # set file name
-                        request.setHeader('Content-Disposition',
-                                          'attachment; filename=%s.zip' \
-                                          % res_name)
-                        # set content type
-                        request.setHeader('content-type', 'application/zip')
-                    elif format in ['seed', 'dataless']:
-                        result_doc = p.getSEED()
-                        # set file name
-                        request.setHeader('Content-Disposition',
-                                          'attachment; filename=%s.dataless' \
-                                          % res_name)
-                        # set content type
-                        request.setHeader('content-type',
-                                          'application/octet-stream')
-                    else:
-                        result_doc = p.getXSEED()
-                        # set file name
-                        request.setHeader('Content-Disposition',
-                                          'attachment; filename=%s' \
-                                          % res_name)
-                        # set content type
-                        request.setHeader('content-type', 'text/xml')
-                except:
-                    raise
-                else:
-                    return result_doc
-        # ok its not a single resource - show all available resources
-        # build up query
-        columns = [tab.c['resource_name']]
-        query = sql.select(columns, distinct=True)
-        # execute query
-        try:
-            results = request.env.db.query(query)
-        except:
-            results = []
-        return formatResults(request, results)

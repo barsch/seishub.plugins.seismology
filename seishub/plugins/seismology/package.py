@@ -29,7 +29,7 @@ class SeismicStationResourceType(Component):
     package_id = 'seismology'
     resourcetype_id = 'station'
 
-    registerSchema('xsd' + os.sep + 'xml-seed.xsd', 'XMLSchema')
+    registerSchema('xsd' + os.sep + 'xml-seed-1.1.xsd', 'XMLSchema')
     registerStylesheet('xslt' + os.sep + 'station_googlemaps_xhtml.xslt', 'map')
     registerStylesheet('xslt' + os.sep + 'station_metadata.xslt', 'metadata')
 
