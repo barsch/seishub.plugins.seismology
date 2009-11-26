@@ -7,10 +7,41 @@ from obspy.core import UTCDateTime
 from obspy.xseed.parser import Parser
 from seishub.core import Component, implements
 from seishub.db.util import formatResults
-from seishub.packages.interfaces import IAdminPanel, IMapper
+from seishub.packages.interfaces import IAdminPanel, IMapper, IResourceFormater
 from sqlalchemy import sql, Table
 import os
 import zipfile
+
+
+class DatalessFormater(Component):
+    """
+    Dataless representation of a seismic station resource.
+    """
+    implements(IResourceFormater)
+
+    package_id = "seismology"
+    resourcetype_id = "station"
+    format_id = ["dataless"]
+
+    @staticmethod
+    def format(request, data, res_name):
+        """
+        """
+        try:
+            p = Parser()
+            p.read(data)
+            result = p.getSEED()
+        except:
+            raise
+        # set file name
+        request.setHeader('Content-Disposition',
+                          'attachment; filename=%s.dataless' \
+                          % res_name)
+        # set content type
+        request.setHeader('content-type',
+                          'application/octet-stream')
+        return result
+
 
 #class StationPanel(Component):
 #    """
