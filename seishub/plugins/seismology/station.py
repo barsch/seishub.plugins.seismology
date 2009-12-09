@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """
+Seismology package for SeisHub.
 """
 
 from StringIO import StringIO
 from obspy.core import UTCDateTime
-from obspy.xseed.parser import Parser
+from obspy.xseed import Parser
 from seishub.core import Component, implements
 from seishub.db.util import formatResults
-from seishub.packages.interfaces import IAdminPanel, IMapper, IResourceFormater
+from seishub.packages.interfaces import IMapper, IResourceFormater
 from sqlalchemy import sql, Table
 import os
 import zipfile
@@ -81,7 +82,6 @@ class RESPFormater(Component):
                     data = response[1].read()
                     res_name = response[0]
                     break
-
         except:
             return data
         if channel == '':
@@ -91,6 +91,7 @@ class RESPFormater(Component):
         request.setHeader('Content-Disposition',
                          'attachment; filename=%s' % res_name)
         return data
+
 
 #class StationPanel(Component):
 #    """
@@ -119,6 +120,7 @@ class RESPFormater(Component):
 #        data['status'] = status or ''
 #        data['network_ids'] = self._getNetworkIDs()
 #        data['station_ids'] = self._getStationIDs(nid)
+#        print data
 #        return data
 #
 #    def _getNetworkIDs(self):
@@ -162,6 +164,7 @@ class RESPFormater(Component):
 
 class StationListMapper(Component):
     """
+    Generates a list of available seismic stations.
     """
     implements(IMapper)
 
@@ -169,6 +172,8 @@ class StationListMapper(Component):
     mapping_url = '/seismology/station/getList'
 
     def process_GET(self, request):
+        """
+        """
         # parse input arguments
         tab = Table('/seismology/station', request.env.db.metadata,
                     autoload=True)
@@ -179,16 +184,17 @@ class StationListMapper(Component):
         except:
             limit = None
             offset = 0
-        oncl = sql.and_(1 == 1)
         # build up query
         columns = [tab.c['document_id'], tab.c['package_id'],
                    tab.c['resourcetype_id'], tab.c['resource_name'],
-                   tab.c['station_name'], tab.c['network_id'],
-                   tab.c['station_id'], tab.c['longitude'], tab.c['elevation'],
-                   tab.c['latitude'], tab.c['quality'],
+                   tab.c['network_id'], tab.c['station_id'],
+                   tab.c['station_name'], tab.c['latitude'],
+                   tab.c['longitude'], tab.c['elevation'], tab.c['quality'],
                    tab.c['start_datetime'], tab.c['end_datetime']]
-        query = sql.select(columns, oncl, limit=limit, distinct=True,
-                           offset=offset, order_by=tab.c['start_datetime'])
+        query = sql.select(columns, limit=limit, distinct=True,
+                           offset=offset, order_by=[tab.c['network_id'],
+                                                    tab.c['station_id'],
+                                                    tab.c['start_datetime']])
         # process arguments
         # datetime
         try:
@@ -225,11 +231,12 @@ class StationListMapper(Component):
         except:
             results = []
         # count all distinct values
-        query = sql.select([sql.func.count(tab.c['document_id'].distinct())])
+        columns = [tab.c['document_id'], tab.c['start_datetime']]
+        query = sql.select(columns, distinct=True).count()
         # execute query
         try:
             count = request.env.db.query(query).fetchone()[0]
         except:
             count = 0
         return formatResults(request, results, limit=limit, offset=offset,
-                             count=count)
+                             count=count, build_url=True)
