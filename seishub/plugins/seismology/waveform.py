@@ -13,6 +13,8 @@ from seishub.registry.defaults import miniseed_tab
 from sqlalchemy import sql
 import datetime
 import os
+from lxml.etree import Element, SubElement as Sub
+from seishub.util.xmlwrapper import toString
 
 
 #class WaveformPanel(Component):
@@ -125,6 +127,62 @@ class WaveformLatencyMapper(Component):
             results = []
         return formatResults(request, results)
 
+class WaveformPathMapper(Component):
+    """
+    """
+    implements(IMapper)
+
+    mapping_url = '/seismology/waveform/getWaveformPath'
+
+    def process_GET(self, request):
+        # process parameters
+        try:
+            start = request.args0.get('start_datetime')
+            start = UTCDateTime(start)
+        except:
+            start = UTCDateTime() - 60 * 20
+        try:
+            end = request.args0.get('end_datetime')
+            end = UTCDateTime(end)
+        except:
+            # 10 minutes
+            end = UTCDateTime()
+        # build up query
+        columns = [miniseed_tab.c['path'], miniseed_tab.c['file'],
+                   miniseed_tab.c['network_id'], miniseed_tab.c['station_id'],
+                   miniseed_tab.c['location_id'], miniseed_tab.c['channel_id']]
+        query = sql.select(columns)
+        for col in ['network_id', 'station_id', 'location_id', 'channel_id']:
+            text = request.args0.get(col, None)
+            if not text:
+                continue
+            if '*' in text or '?' in text:
+                text = text.replace('?', '_')
+                text = text.replace('*', '%')
+                query = query.where(miniseed_tab.c[col].like(text))
+            else:
+                query = query.where(miniseed_tab.c[col] == text)
+        query = query.where(miniseed_tab.c['end_datetime'] > start.datetime)
+        query = query.where(miniseed_tab.c['start_datetime'] < end.datetime)
+        # execute query
+        try:
+            results = request.env.db.query(query).fetchall()
+        except:
+            results = []
+        # get from local waveform archive
+        file_dict = {}
+        for result in results:
+            fname = result[0] + os.sep + result[1]
+            key = '%s.%s.%s.%s' % (result[2], result[3], result[4], result[5])
+            file_dict.setdefault(key, []).append(fname)
+        # return as xml resource
+        xml = Element("query")
+        for _i in file_dict.keys():
+             s = Sub(xml, "channel", id=_i)
+             for _j in file_dict[_i]:
+	         t = Sub(s, "file")
+	         t.text = _j
+        return toString(xml)
 
 class WaveformCutterMapper(Component):
     """
