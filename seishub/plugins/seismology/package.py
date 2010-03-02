@@ -6,7 +6,9 @@ Seismology package for SeisHub.
 from seishub.core import Component, implements
 from seishub.packages.installer import registerIndex, registerSchema, \
     registerStylesheet
-from seishub.packages.interfaces import IPackage, IResourceType
+from seishub.packages.interfaces import IProcessorIndex, IPackage, \
+    IResourceType
+from seishub.xmldb import index
 import os
 
 
@@ -128,3 +130,27 @@ class SeismicEventResourceType(Component):
                   'numeric')
     registerIndex('event_type', '/event/type', 'text')
     registerIndex('localisation_method', '/event/event_type/value', 'text')
+
+
+class FirstPickIndex(Component):
+    implements(IProcessorIndex)
+
+    package_id = 'seismology'
+    resourcetype_id = 'event'
+    type = index.DATETIME_INDEX
+    label = 'first_pick'
+
+    def eval(self, document):
+        import pdb;pdb.set_trace()
+
+
+class LastPickIndex(Component):
+    implements(IProcessorIndex)
+
+    package_id = 'seismology'
+    resourcetype_id = 'event'
+    type = index.DATETIME_INDEX
+    label = 'last_pick'
+
+    def eval(self, document):
+        import pdb;pdb.set_trace()
