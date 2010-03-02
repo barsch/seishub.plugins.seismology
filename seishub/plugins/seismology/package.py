@@ -10,6 +10,7 @@ from seishub.packages.interfaces import IProcessorIndex, IPackage, \
     IResourceType
 from seishub.xmldb import index
 import os
+from obspy.core import UTCDateTime
 
 
 class SeismologyPackage(Component):
@@ -141,7 +142,17 @@ class FirstPickIndex(Component):
     label = 'first_pick'
 
     def eval(self, document):
-        import pdb;pdb.set_trace()
+        # fetch all pick times
+        picks = document.getXml_doc().evalXPath('/event/pick/time/value/text()')
+        if not picks:
+            return None
+        # get first pick
+        saved = UTCDateTime(str(picks[0]))
+        for pick in picks[1:]:
+            temp = UTCDateTime(str(pick))
+            if temp < saved:
+                saved = temp
+        return saved
 
 
 class LastPickIndex(Component):
@@ -153,4 +164,14 @@ class LastPickIndex(Component):
     label = 'last_pick'
 
     def eval(self, document):
-        import pdb;pdb.set_trace()
+        # fetch all pick times
+        picks = document.getXml_doc().evalXPath('/event/pick/time/value/text()')
+        if not picks:
+            return None
+        # get last pick
+        saved = UTCDateTime(str(picks[0]))
+        for pick in picks[1:]:
+            temp = UTCDateTime(str(pick))
+            if temp > saved:
+                saved = temp
+        return saved
