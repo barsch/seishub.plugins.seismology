@@ -112,9 +112,11 @@ class WaveformLatencyMapper(Component):
         query = sql.select(columns, group_by=group_by, order_by=group_by)
         for col in ['network_id', 'station_id', 'location_id', 'channel_id']:
             text = request.args0.get(col, None)
-            if not text:
+            if text == None:
                 continue
-            if '*' in text or '?' in text:
+            elif text == "":
+                query = query.where(miniseed_tab.c[col] == None)
+            elif '*' in text or '?' in text:
                 text = text.replace('?', '_')
                 text = text.replace('*', '%')
                 query = query.where(miniseed_tab.c[col].like(text))
@@ -154,9 +156,11 @@ class WaveformPathMapper(Component):
         query = sql.select(columns)
         for col in ['network_id', 'station_id', 'location_id', 'channel_id']:
             text = request.args0.get(col, None)
-            if not text:
+            if text == None:
                 continue
-            if '*' in text or '?' in text:
+            elif text == "":
+                query = query.where(miniseed_tab.c[col] == None)
+            elif '*' in text or '?' in text:
                 text = text.replace('?', '_')
                 text = text.replace('*', '%')
                 query = query.where(miniseed_tab.c[col].like(text))
@@ -214,9 +218,11 @@ class WaveformCutterMapper(Component):
         query = sql.select(columns)
         for col in ['network_id', 'station_id', 'location_id', 'channel_id']:
             text = request.args0.get(col, None)
-            if not text:
+            if text == None:
                 continue
-            if '*' in text or '?' in text:
+            elif text == "":
+                query = query.where(miniseed_tab.c[col] == None)
+            elif '*' in text or '?' in text:
                 text = text.replace('?', '_')
                 text = text.replace('*', '%')
                 query = query.where(miniseed_tab.c[col].like(text))
