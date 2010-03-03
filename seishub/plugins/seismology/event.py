@@ -49,21 +49,23 @@ class EventListMapper(Component):
         temp = request.args0.get('localisation_method')
         if temp:
             query = query.where(tab.c['localisation_method'] == temp)
-        try:
-            temp = UTCDateTime(request.args0.get('datetime'))
-            query = query.where(tab.c['datetime'] == temp.datetime)
-        except:
-            pass
-        try:
-            temp = UTCDateTime(request.args0.get('min_datetime'))
-            query = query.where(tab.c['datetime'] >= temp.datetime)
-        except:
-            pass
-        try:
-            temp = UTCDateTime(request.args0.get('max_datetime'))
-            query = query.where(tab.c['datetime'] <= temp.datetime)
-        except:
-            pass
+        # min-max datetime values
+        for key in ['datetime', 'first_pick', 'last_pick']:
+            try:
+                temp = UTCDateTime(request.args0.get(key))
+                query = query.where(tab.c[key] == temp.datetime)
+            except:
+                pass
+            try:
+                temp = UTCDateTime(request.args0.get('min_' + key))
+                query = query.where(tab.c[key] >= temp.datetime)
+            except:
+                pass
+            try:
+                temp = UTCDateTime(request.args0.get('max_' + key))
+                query = query.where(tab.c[key] <= temp.datetime)
+            except:
+                pass
         # min-max float values
         for key in ['latitude', 'longitude', 'magnitude', 'depth']:
             try:
