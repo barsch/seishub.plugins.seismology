@@ -3,18 +3,17 @@
 Seismology package for SeisHub.
 """
 
-from obspy.core import UTCDateTime
-from obspy.mseed import libmseed
-from seishub.core import Component, implements
-from seishub.db.util import querySingleColumn, formatResults
-from seishub.exceptions import InternalServerError
-from seishub.packages.interfaces import IAdminPanel, IMapper
-from seishub.registry.defaults import miniseed_tab
-from sqlalchemy import sql
-import datetime
-import os
 from lxml.etree import Element, SubElement as Sub
+from obspy.core import UTCDateTime
+from obspy.db.db import WaveformChannel, WaveformFile, WaveformPath
+from obspy.mseed.libmseed import LibMSEED
+from seishub.core import Component, implements
+from seishub.db.util import formatORMResults
+from seishub.exceptions import InternalServerError
+from seishub.packages.interfaces import IMapper
 from seishub.util.xmlwrapper import toString
+from sqlalchemy import func
+import os
 
 
 #class WaveformPanel(Component):
@@ -39,7 +38,10 @@ class WaveformNetworkIDMapper(Component):
     mapping_url = '/seismology/waveform/getNetworkIds'
 
     def process_GET(self, request):
-        return querySingleColumn(request, 'default_miniseed', 'network_id')
+        session = self.env.db.session()
+        query = session.query(WaveformChannel.network.label('item'))
+        query = query.distinct()
+        return formatORMResults(request, query)
 
 
 class WaveformStationIDMapper(Component):
@@ -51,10 +53,13 @@ class WaveformStationIDMapper(Component):
     mapping_url = '/seismology/waveform/getStationIds'
 
     def process_GET(self, request):
-        kwargs = {}
-        kwargs['network_id'] = request.args0.get('network_id', None)
-        return querySingleColumn(request, 'default_miniseed', 'station_id',
-                                 **kwargs)
+        network = request.args0.get('network_id', None)
+        session = self.env.db.session()
+        query = session.query(WaveformChannel.station.label('item'))
+        query = query.distinct()
+        if network:
+            query = query.filter(WaveformChannel.network == network)
+        return formatORMResults(request, query)
 
 
 class WaveformLocationIDMapper(Component):
@@ -66,11 +71,16 @@ class WaveformLocationIDMapper(Component):
     mapping_url = '/seismology/waveform/getLocationIds'
 
     def process_GET(self, request):
-        kwargs = {}
-        kwargs['network_id'] = request.args0.get('network_id', None)
-        kwargs['station_id'] = request.args0.get('station_id', None)
-        return querySingleColumn(request, 'default_miniseed', 'location_id',
-                                 **kwargs)
+        network = request.args0.get('network_id', None)
+        station = request.args0.get('station_id', None)
+        session = self.env.db.session()
+        query = session.query(WaveformChannel.location.label('item'))
+        query = query.distinct()
+        if network:
+            query = query.filter(WaveformChannel.network == network)
+        if station:
+            query = query.filter(WaveformChannel.station == station)
+        return formatORMResults(request, query)
 
 
 class WaveformChannelIDMapper(Component):
@@ -82,12 +92,19 @@ class WaveformChannelIDMapper(Component):
     mapping_url = '/seismology/waveform/getChannelIds'
 
     def process_GET(self, request):
-        kwargs = {}
-        kwargs['network_id'] = request.args0.get('network_id', None)
-        kwargs['station_id'] = request.args0.get('station_id', None)
-        kwargs['location_id'] = request.args0.get('location_id', None)
-        return querySingleColumn(request, 'default_miniseed', 'channel_id',
-                                 **kwargs)
+        network = request.args0.get('network_id', None)
+        station = request.args0.get('station_id', None)
+        location = request.args0.get('location_id', None)
+        session = self.env.db.session()
+        query = session.query(WaveformChannel.channel.label('item'))
+        query = query.distinct()
+        if network:
+            query = query.filter(WaveformChannel.network == network)
+        if station:
+            query = query.filter(WaveformChannel.station == station)
+        if location:
+            query = query.filter(WaveformChannel.location == location)
+        return formatORMResults(request, query)
 
 
 class WaveformLatencyMapper(Component):
@@ -99,35 +116,33 @@ class WaveformLatencyMapper(Component):
     mapping_url = '/seismology/waveform/getLatency'
 
     def process_GET(self, request):
-        # process parameters
-        columns = [
-            miniseed_tab.c['network_id'], miniseed_tab.c['station_id'],
-            miniseed_tab.c['location_id'], miniseed_tab.c['channel_id'],
-            (datetime.datetime.utcnow() -
-             sql.func.max(miniseed_tab.c['end_datetime'])).label('latency')]
-        group_by = [
-            miniseed_tab.c['network_id'], miniseed_tab.c['station_id'],
-            miniseed_tab.c['location_id'], miniseed_tab.c['channel_id']]
         # build up query
-        query = sql.select(columns, group_by=group_by, order_by=group_by)
-        for col in ['network_id', 'station_id', 'location_id', 'channel_id']:
-            text = request.args0.get(col, None)
+        session = self.env.db.session()
+        query = session.query(
+            WaveformChannel.network, WaveformChannel.station,
+            WaveformChannel.location, WaveformChannel.channel,
+            (func.max(WaveformChannel.endtime)).label('latency')
+        )
+        query = query.group_by(
+            WaveformChannel.network, WaveformChannel.station,
+            WaveformChannel.location, WaveformChannel.channel
+        )
+        # process arguments
+        for key in ['network_id', 'station_id', 'location_id', 'channel_id']:
+            text = request.args0.get(key, None)
             if text == None:
                 continue
-            elif text == "":
-                query = query.where(miniseed_tab.c[col] == None)
+            col = getattr(WaveformChannel, key[:-3])
+            if text == "":
+                query = query.filter(col == None)
             elif '*' in text or '?' in text:
                 text = text.replace('?', '_')
                 text = text.replace('*', '%')
-                query = query.where(miniseed_tab.c[col].like(text))
+                query = query.filter(col.like(text))
             else:
-                query = query.where(miniseed_tab.c[col] == text)
-        # execute query
-        try:
-            results = request.env.db.query(query)
-        except:
-            results = []
-        return formatResults(request, results)
+                query = query.filter(col == text)
+        return formatORMResults(request, query)
+
 
 class WaveformPathMapper(Component):
     """
@@ -137,55 +152,59 @@ class WaveformPathMapper(Component):
     mapping_url = '/seismology/waveform/getWaveformPath'
 
     def process_GET(self, request):
-        # process parameters
+        # build up query
+        session = self.env.db.session()
+        query = session.query(WaveformPath.path,
+                              WaveformFile.file,
+                              WaveformChannel.network,
+                              WaveformChannel.station,
+                              WaveformChannel.location,
+                              WaveformChannel.channel)
+        query = query.filter(WaveformPath.id == WaveformFile.path_id)
+        query = query.filter(WaveformFile.id == WaveformChannel.file_id)
+        # process arguments
+        for key in ['network_id', 'station_id', 'location_id', 'channel_id']:
+            text = request.args0.get(key, None)
+            if text == None:
+                continue
+            col = getattr(WaveformChannel, key[:-3])
+            if text == "":
+                query = query.filter(col == None)
+            elif '*' in text or '?' in text:
+                text = text.replace('?', '_')
+                text = text.replace('*', '%')
+                query = query.filter(col.like(text))
+            else:
+                query = query.filter(col == text)
+        # start and end time
         try:
             start = request.args0.get('start_datetime')
             start = UTCDateTime(start)
         except:
             start = UTCDateTime() - 60 * 20
+        finally:
+            query = query.filter(WaveformChannel.endtime > start.datetime)
         try:
             end = request.args0.get('end_datetime')
             end = UTCDateTime(end)
         except:
             # 10 minutes
             end = UTCDateTime()
-        # build up query
-        columns = [miniseed_tab.c['path'], miniseed_tab.c['file'],
-                   miniseed_tab.c['network_id'], miniseed_tab.c['station_id'],
-                   miniseed_tab.c['location_id'], miniseed_tab.c['channel_id']]
-        query = sql.select(columns)
-        for col in ['network_id', 'station_id', 'location_id', 'channel_id']:
-            text = request.args0.get(col, None)
-            if text == None:
-                continue
-            elif text == "":
-                query = query.where(miniseed_tab.c[col] == None)
-            elif '*' in text or '?' in text:
-                text = text.replace('?', '_')
-                text = text.replace('*', '%')
-                query = query.where(miniseed_tab.c[col].like(text))
-            else:
-                query = query.where(miniseed_tab.c[col] == text)
-        query = query.where(miniseed_tab.c['end_datetime'] > start.datetime)
-        query = query.where(miniseed_tab.c['start_datetime'] < end.datetime)
+        finally:
+            query = query.filter(WaveformChannel.starttime < end.datetime)
         # execute query
-        try:
-            results = request.env.db.query(query).fetchall()
-        except:
-            results = []
-        # get from local waveform archive
         file_dict = {}
-        for result in results:
+        for result in query:
             fname = result[0] + os.sep + result[1]
             key = '%s.%s.%s.%s' % (result[2], result[3], result[4], result[5])
             file_dict.setdefault(key, []).append(fname)
         # return as xml resource
         xml = Element("query")
         for _i in file_dict.keys():
-             s = Sub(xml, "channel", id=_i)
-             for _j in file_dict[_i]:
-	         t = Sub(s, "file")
-	         t.text = _j
+            s = Sub(xml, "channel", id=_i)
+            for _j in file_dict[_i]:
+                t = Sub(s, "file")
+                t.text = _j
         return toString(xml)
 
 class WaveformCutterMapper(Component):
@@ -196,51 +215,54 @@ class WaveformCutterMapper(Component):
     mapping_url = '/seismology/waveform/getWaveform'
 
     def process_GET(self, request):
-        # process parameters
+        # build up query
+        session = self.env.db.session()
+        query = session.query(WaveformPath.path,
+                              WaveformFile.file,
+                              WaveformChannel.network,
+                              WaveformChannel.station,
+                              WaveformChannel.location,
+                              WaveformChannel.channel)
+        query = query.filter(WaveformPath.id == WaveformFile.path_id)
+        query = query.filter(WaveformFile.id == WaveformChannel.file_id)
+        # process arguments
+        for key in ['network_id', 'station_id', 'location_id', 'channel_id']:
+            text = request.args0.get(key, None)
+            if text == None:
+                continue
+            col = getattr(WaveformChannel, key[:-3])
+            if text == "":
+                query = query.filter(col == None)
+            elif '*' in text or '?' in text:
+                text = text.replace('?', '_')
+                text = text.replace('*', '%')
+                query = query.filter(col.like(text))
+            else:
+                query = query.filter(col == text)
+        # start and end time
         try:
             start = request.args0.get('start_datetime')
             start = UTCDateTime(start)
         except:
             start = UTCDateTime() - 60 * 20
+        finally:
+            query = query.filter(WaveformChannel.endtime > start.datetime)
         try:
             end = request.args0.get('end_datetime')
             end = UTCDateTime(end)
         except:
             # 10 minutes
             end = UTCDateTime()
-        # limit time span to maximal 6 hours
-        if end - start > 60 * 60 * 6:
-            end = start + 60 * 60 * 6
-        # build up query
-        columns = [miniseed_tab.c['path'], miniseed_tab.c['file'],
-                   miniseed_tab.c['network_id'], miniseed_tab.c['station_id'],
-                   miniseed_tab.c['location_id'], miniseed_tab.c['channel_id']]
-        query = sql.select(columns)
-        for col in ['network_id', 'station_id', 'location_id', 'channel_id']:
-            text = request.args0.get(col, None)
-            if text == None:
-                continue
-            elif text == "":
-                query = query.where(miniseed_tab.c[col] == None)
-            elif '*' in text or '?' in text:
-                text = text.replace('?', '_')
-                text = text.replace('*', '%')
-                query = query.where(miniseed_tab.c[col].like(text))
-            else:
-                query = query.where(miniseed_tab.c[col] == text)
-        query = query.where(miniseed_tab.c['end_datetime'] > start.datetime)
-        query = query.where(miniseed_tab.c['start_datetime'] < end.datetime)
+        finally:
+            query = query.filter(WaveformChannel.starttime < end.datetime)
         # execute query
-        try:
-            results = request.env.db.query(query).fetchall()
-        except:
-            results = []
+        results = query.all()
         # check for results
         if len(results) == 0:
             # ok lets use arclink
             return self._fetchFromArclink(request, start, end)
         # get from local waveform archive
-        ms = libmseed()
+        ms = LibMSEED()
         file_dict = {}
         for result in results:
             fname = result[0] + os.sep + result[1]
