@@ -2,11 +2,11 @@
 <xsl:stylesheet exclude-result-prefixes="xlink" version="1.0"
   xmlns:xlink="http://www.w3.org/1999/xlink"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-  <xsl:param name="googlekey" />
   <xsl:output doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
     doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
     encoding="utf-8" indent="yes" media-type="text/html" method="xml"
     omit-xml-declaration="yes" />
+  <xsl:param name="google_api_key" />
   <xsl:template match="/event">
     <html lang="en" xml:lang="en">
       <head>
@@ -18,7 +18,7 @@
         <script type="text/javascript">
           <xsl:attribute name="src">
             <xsl:text>http://www.google.com/jsapi?key=</xsl:text>
-            <xsl:value-of select="$googlekey" />
+            <xsl:value-of select="$google_api_key" />
           </xsl:attribute>
         </script>
         <script type="text/javascript">
@@ -94,29 +94,29 @@
             <tr>
               <th>Focal Mechanism</th>
               <td>
-              <img>
-                <xsl:attribute name="src">
-                  <xsl:text>/seismology/event/plotBeachball</xsl:text>
-                  <xsl:text>?size=150&amp;linewidth=1&amp;fm=</xsl:text>
-                  <xsl:value-of
-                    select="focalMechanism/momentTensor/tensor/Mrr/value" />
-                  <xsl:text>,</xsl:text>
-                  <xsl:value-of
-                    select="focalMechanism/momentTensor/tensor/Mtt/value" />
-                  <xsl:text>,</xsl:text>
-                  <xsl:value-of
-                    select="focalMechanism/momentTensor/tensor/Mpp/value" />
-                  <xsl:text>,</xsl:text>
-                  <xsl:value-of
-                    select="focalMechanism/momentTensor/tensor/Mrp/value" />
-                  <xsl:text>,</xsl:text>
-                  <xsl:value-of
-                    select="focalMechanism/momentTensor/tensor/Mrt/value" />
-                  <xsl:text>,</xsl:text>
-                  <xsl:value-of
-                    select="focalMechanism/momentTensor/tensor/Mtp/value" />
-                </xsl:attribute>
-              </img>
+                <img>
+                  <xsl:attribute name="src">
+                    <xsl:text>/seismology/event/plotBeachball</xsl:text>
+                    <xsl:text>?size=150&amp;linewidth=1&amp;fm=</xsl:text>
+                    <xsl:value-of
+                      select="focalMechanism/momentTensor/tensor/Mrr/value" />
+                    <xsl:text>,</xsl:text>
+                    <xsl:value-of
+                      select="focalMechanism/momentTensor/tensor/Mtt/value" />
+                    <xsl:text>,</xsl:text>
+                    <xsl:value-of
+                      select="focalMechanism/momentTensor/tensor/Mpp/value" />
+                    <xsl:text>,</xsl:text>
+                    <xsl:value-of
+                      select="focalMechanism/momentTensor/tensor/Mrp/value" />
+                    <xsl:text>,</xsl:text>
+                    <xsl:value-of
+                      select="focalMechanism/momentTensor/tensor/Mrt/value" />
+                    <xsl:text>,</xsl:text>
+                    <xsl:value-of
+                      select="focalMechanism/momentTensor/tensor/Mtp/value" />
+                  </xsl:attribute>
+                </img>
               </td>
             </tr>
           </xsl:if>

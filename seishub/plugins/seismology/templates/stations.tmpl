@@ -1,21 +1,21 @@
 #def CSS
-<link rel="stylesheet" type="text/css" href="/yui/build/fonts/fonts-min.css" />
-<link rel="stylesheet" type="text/css" href="/yui/build/paginator/assets/skins/sam/paginator.css" />
-<link rel="stylesheet" type="text/css" href="/yui/build/datatable/assets/skins/sam/datatable.css" />
-<link rel="stylesheet" type="text/css" href="/yui/build/calendar/assets/skins/sam/calendar.css" />
-<link rel="stylesheet" type="text/css" href="/yui/build/menu/assets/skins/sam/menu.css" />
-<link rel="stylesheet" type="text/css" href="/yui/build/button/assets/skins/sam/button.css" />
+<link rel="stylesheet" type="text/css" href="/yui2/build/fonts/fonts-min.css" />
+<link rel="stylesheet" type="text/css" href="/yui2/build/paginator/assets/skins/sam/paginator.css" />
+<link rel="stylesheet" type="text/css" href="/yui2/build/datatable/assets/skins/sam/datatable.css" />
+<link rel="stylesheet" type="text/css" href="/yui2/build/calendar/assets/skins/sam/calendar.css" />
+<link rel="stylesheet" type="text/css" href="/yui2/build/menu/assets/skins/sam/menu.css" />
+<link rel="stylesheet" type="text/css" href="/yui2/build/button/assets/skins/sam/button.css" />
 #end def
 #def JAVASCRIPT
-<script type="text/javascript" src="/yui/build/yahoo-dom-event/yahoo-dom-event.js"></script>
-<script type="text/javascript" src="/yui/build/connection/connection-min.js"></script>
-<script type="text/javascript" src="/yui/build/element/element-min.js"></script>
-<script type="text/javascript" src="/yui/build/paginator/paginator-min.js"></script>
-<script type="text/javascript" src="/yui/build/datasource/datasource-min.js"></script>
-<script type="text/javascript" src="/yui/build/datatable/datatable-min.js"></script>
-<script type="text/javascript" src="/yui/build/container/container_core-min.js"></script>
-<script type="text/javascript" src="/yui/build/menu/menu-min.js"></script>
-<script type="text/javascript" src="/yui/build/button/button-min.js"></script>
+<script type="text/javascript" src="/yui2/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+<script type="text/javascript" src="/yui2/build/connection/connection-min.js"></script>
+<script type="text/javascript" src="/yui2/build/element/element-min.js"></script>
+<script type="text/javascript" src="/yui2/build/paginator/paginator-min.js"></script>
+<script type="text/javascript" src="/yui2/build/datasource/datasource-min.js"></script>
+<script type="text/javascript" src="/yui2/build/datatable/datatable-min.js"></script>
+<script type="text/javascript" src="/yui2/build/container/container_core-min.js"></script>
+<script type="text/javascript" src="/yui2/build/menu/menu-min.js"></script>
+<script type="text/javascript" src="/yui2/build/button/button-min.js"></script>
 #end def
 
 
@@ -107,7 +107,13 @@ YAHOO.example.DynamicData = function() {
                  el.innerHTML = info + oData + '">[XSEED]<\/a> ' +
                  info + oData + '?format=dataless">[Dataless]<\/a> ' +
                  info + oData + '?format=resp">[RESP]<\/a> ' +
-                 info + oData + '?format=map">[HTML]<\/a> ';
+                 info + oData + '?format=map">[HTML]<\/a>';
+             }},
+        {key:"resource_name", label:'', className:'center', 
+             formatter: function (el, oRecord, oColumn, oData) {
+                 el.innerHTML = 
+                 info + oData + '/.index?format=xhtml">[Indexes]<\/a> ' +
+                 info + oData + '/.meta?format=xhtml">[Metadata]<\/a>';
              }}
     ];
     
@@ -128,20 +134,21 @@ YAHOO.example.DynamicData = function() {
             {key:"end_datetime"},
             {key:"resource_name"}
         ],
-        metaNode : "query",
+        metaNode : "ResultSet",
         metaFields: {
-            totalResultsAvailable : "totalResultsAvailable", 
-            totalResultsReturned : "totalResultsReturned",
+            totalResultsAvailable: "totalResultsAvailable",
+            totalResultsReturned: "totalResultsReturned",
+            firstResultPosition: "firstResultPosition"
         }
     };
     
     var myRequestBuilder = function(oState, oSelf) {
         // Get states or use defaults
-        oState = oState || {pagination:null, sortedBy:null};
+        oState = oState || {pagination: null, sortedBy: null};
         var offset = (oState.pagination) ? oState.pagination.recordOffset : 0;
-        var limit = (oState.pagination) ? oState.pagination.rowsPerPage : 20;
+        var limit = (oState.pagination) ? oState.pagination.rowsPerPage : null;
         // Build custom request
-        return "offset=" + offset + "&limit=" + (offset + limit - 1);
+        return "&offset=" + offset + "&limit=" + limit;
     };
 
     // DataTable configuration
@@ -152,9 +159,9 @@ YAHOO.example.DynamicData = function() {
             rowsPerPage: 20, 
             template: YAHOO.widget.Paginator.TEMPLATE_ROWS_PER_PAGE, 
             rowsPerPageOptions: [10, 20, 50, 100],
-            alwaysVisible: false
+            alwaysVisible: true
         }),
-        generateRequest : myRequestBuilder 
+        generateRequest: this.myRequestBuilder 
     };
     
     // DataTable instance
@@ -170,6 +177,7 @@ YAHOO.example.DynamicData = function() {
         oPayload.totalRecords = oResponse.meta.totalResultsAvailable;
         return oPayload;
     }
+
     var handleStatus = function(e) {
         var status = status_list[e.newValue.index];
         var oCallback = {

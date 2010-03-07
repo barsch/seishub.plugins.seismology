@@ -8,7 +8,7 @@ from obspy.core import UTCDateTime
 from obspy.xseed import Parser
 from seishub.core import Component, implements
 from seishub.db.util import formatResults
-from seishub.packages.interfaces import IMapper, IResourceFormater
+from seishub.packages.interfaces import IMapper, IResourceFormater, IAdminPanel
 from sqlalchemy import sql, Table
 import os
 import zipfile
@@ -93,73 +93,73 @@ class RESPFormater(Component):
         return data
 
 
-#class StationPanel(Component):
-#    """
-#    """
-#    implements(IAdminPanel)
-#
-#    template = 'templates' + os.sep + 'stations.tmpl'
-#    panel_ids = ('seismology', 'Seismology', 'stations', 'Stations')
-#
-#    def render(self, request):
-#        # fetch args
-#        nid = request.args0.get('network_id', False)
-#        nid_changed = request.args0.get('network_id_button', False)
-#        sid = request.args0.get('station_id', False)
-#        status = request.args0.get('status', '')
-#        # reset + defaults
-#        if nid == '*':
-#            nid = False
-#            sid = False
-#        elif sid == '*' or nid_changed:
-#            sid = False
-#        # set data
-#        data = {}
-#        data['network_id'] = nid or ''
-#        data['station_id'] = sid or ''
-#        data['status'] = status or ''
-#        data['network_ids'] = self._getNetworkIDs()
-#        data['station_ids'] = self._getStationIDs(nid)
-#        print data
-#        return data
-#
-#    def _getNetworkIDs(self):
-#        """
-#        Fetches all possible network id's.
-#        """
-#        # network
-#        query = sql.text("""
-#            SELECT DISTINCT(network_id) 
-#            FROM "/seismology/station"
-#            ORDER BY network_id
-#        """)
-#        # execute query
-#        try:
-#            results = self.env.db.query(query)
-#            result = [r[0] for r in results]
-#        except:
-#            result = []
-#        return result
-#
-#    def _getStationIDs(self, network_id=False):
-#        """
-#        Fetches all station id's of given network id.
-#        """
-#        if not network_id:
-#            return []
-#        query = sql.text("""
-#            SELECT DISTINCT(station_id) 
-#            FROM "/seismology/station"
-#            WHERE network_id = :network_id
-#            ORDER BY station_id
-#        """)
-#        # execute query
-#        try:
-#            results = self.env.db.query(query, network_id=network_id)
-#            result = [r[0] for r in results]
-#        except:
-#            result = []
-#        return result
+class StationPanel(Component):
+    """
+    A seismic station overview for the administrative web interface.
+    """
+    implements(IAdminPanel)
+
+    template = 'templates' + os.sep + 'stations.tmpl'
+    panel_ids = ('seismology', 'Seismology', 'stations', 'Stations')
+
+    def render(self, request):
+        # fetch args
+        nid = request.args0.get('network_id', False)
+        nid_changed = request.args0.get('network_id_button', False)
+        sid = request.args0.get('station_id', False)
+        status = request.args0.get('status', '')
+        # reset + defaults
+        if nid == '*':
+            nid = False
+            sid = False
+        elif sid == '*' or nid_changed:
+            sid = False
+        # set data
+        data = {}
+        data['network_id'] = nid or ''
+        data['station_id'] = sid or ''
+        data['status'] = status or ''
+        data['network_ids'] = self._getNetworkIDs()
+        data['station_ids'] = self._getStationIDs(nid)
+        return data
+
+    def _getNetworkIDs(self):
+        """
+        Fetches all possible network id's.
+        """
+        # network
+        query = sql.text("""
+            SELECT DISTINCT(network_id) 
+            FROM "/seismology/station"
+            ORDER BY network_id
+        """)
+        # execute query
+        try:
+            results = self.env.db.query(query)
+            result = [r[0] for r in results]
+        except:
+            result = []
+        return result
+
+    def _getStationIDs(self, network_id=False):
+        """
+        Fetches all station id's of given network id.
+        """
+        if not network_id:
+            return []
+        query = sql.text("""
+            SELECT DISTINCT(station_id) 
+            FROM "/seismology/station"
+            WHERE network_id = :network_id
+            ORDER BY station_id
+        """)
+        # execute query
+        try:
+            results = self.env.db.query(query, network_id=network_id)
+            result = [r[0] for r in results]
+        except:
+            result = []
+        return result
 
 
 class StationListMapper(Component):

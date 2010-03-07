@@ -1,179 +1,166 @@
 #def CSS
-  <link rel="stylesheet" type="text/css" href="/yui/build/fonts/fonts-min.css" />
-  <link rel="stylesheet" type="text/css" href="/yui/build/button/assets/skins/sam/button.css" />
-  <link rel="stylesheet" type="text/css" href="/yui/build/container/assets/skins/sam/container.css" />
-  <link rel="stylesheet" type="text/css" href="/yui/build/calendar/assets/skins/sam/calendar.css" />
+<link rel="stylesheet" type="text/css" href="/yui2/build/fonts/fonts-min.css" />
+<link rel="stylesheet" type="text/css" href="/yui2/build/paginator/assets/skins/sam/paginator.css" />
+<link rel="stylesheet" type="text/css" href="/yui2/build/datatable/assets/skins/sam/datatable.css" />
+<link rel="stylesheet" type="text/css" href="/yui2/build/calendar/assets/skins/sam/calendar.css" />
+<link rel="stylesheet" type="text/css" href="/yui2/build/menu/assets/skins/sam/menu.css" />
+<link rel="stylesheet" type="text/css" href="/yui2/build/button/assets/skins/sam/button.css" />
 #end def
 #def JAVASCRIPT
-  <script type="text/javascript" src="/yui/build/yahoo-dom-event/yahoo-dom-event.js"></script>
-  <script type="text/javascript" src="/yui/build/dragdrop/dragdrop-min.js"></script>
-  <script type="text/javascript" src="/yui/build/element/element-min.js"></script>
-  <script type="text/javascript" src="/yui/build/button/button-min.js"></script>
-  <script type="text/javascript" src="/yui/build/container/container-min.js"></script>
-  <script type="text/javascript" src="/yui/build/calendar/calendar-min.js"></script>
+<script type="text/javascript" src="/yui2/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+<script type="text/javascript" src="/yui2/build/connection/connection-min.js"></script>
+<script type="text/javascript" src="/yui2/build/element/element-min.js"></script>
+<script type="text/javascript" src="/yui2/build/paginator/paginator-min.js"></script>
+<script type="text/javascript" src="/yui2/build/datasource/datasource-min.js"></script>
+<script type="text/javascript" src="/yui2/build/datatable/datatable-min.js"></script>
+<script type="text/javascript" src="/yui2/build/container/container_core-min.js"></script>
+<script type="text/javascript" src="/yui2/build/menu/menu-min.js"></script>
+<script type="text/javascript" src="/yui2/build/button/button-min.js"></script>
 #end def
 
 
 <h1>Events</h1>
-<h2>Search Events</h2>
 
-<form method="post" id="add" action="">
-  <div class="field-left">
-    <label>End</label><br />
-    <input type="text" size="10" name="start_datetime" value="" />
-    <div id="cal1Container"></div> 
-  </div>
-  <div class="field">
-    <label>Start</label><br />
-    <input type="text" size="10" id="date" name="date" value="" />
-    <button type="button" id="show" title="Show Calendar">
-      <img src="/yui/assets/calbtn.gif" width="18" height="18" alt="Calendar" />
-    </button>
-  </div>
-  <div class="field-left">
-    <label>Station</label><br />
-    <select name="station_id" id="station_id">
-      <option></option>
-    </select>
-  </div>
-  <div class="field-left">
-    <label>Location</label><br />
-    <select name="location_id" id="location_id">
-      <option></option>
-    </select>
-  </div>
-  <div class="field-left">
-    <label>Channel</label><br />
-    <select name="channel_id" id="channel_id">
-      <option></option>
-    </select>
-  </div>
-  <div class="field">
-    <label>Network</label><br />
-    <select name="network_id" id="network_id">
-      <option></option>
-    </select>
-  </div>
-  <div class="button">
-    <input type="submit" name="add" value="Search" />
-    <input type="reset" name="reset" value="Reset" />
-  </div>
+<form method="POST" id="filter" action="">
+  <fieldset id="filter_fieldset">
+    <legend>Filter</legend>
+    <div class="field-left">
+      <label>End</label><br />
+      <input type="text" size="10" name="start_datetime" value="" />
+      <div id="cal1Container"></div> 
+    </div>
+    <div class="field">
+      <label>Start</label><br />
+      <input type="text" size="10" id="date" name="date" value="" />
+      <button type="button" id="show" title="Show Calendar">
+        <img src="/yui2/assets/calbtn.gif" alt="Calendar" />
+      </button>
+    </div>
+    <div class="field-left">
+      <label>Min. Magnitude</label><br />
+      <input type="text" size="5" id="min_magnitude" name="min_magnitude" 
+             value="0" />
+    </div>
+    <div class="field">
+      <label>Max. Magnitude</label><br />
+      <input type="text" size="5" id="max_magnitude" name="max_magnitude" 
+             value="10" />
+    </div>
+    <div class="field">
+      <div> 
+        <input id="search_button" type="submit" name="search_button" 
+               value="Search" /> 
+      </div> 
+    </div>
+  </fieldset>
 </form>
 
 <br />
 <br />
 
 
+<br />
+
+<div id="dynamicdata"></div>
+
 <script type="text/javascript">
 /* <![CDATA[ */
-    YAHOO.util.Event.onDOMReady(function()
-    {
-        var Event = YAHOO.util.Event, 
-            Dom = YAHOO.util.Dom,
-            dialog,
-            calendar;
-        var showBtn = Dom.get("show");
-        Event.on(showBtn, "click", function() 
-        {
 
-            // Lazy Dialog Creation - Wait to create the Dialog, and setup document click listeners, until the first time the button is clicked.
-            if (!dialog) {
+YAHOO.util.Event.onContentReady("filter_fieldset", function () {
+    var b1 = new YAHOO.widget.Button("search_button");
+});
 
-                // Hide Calendar if we click anywhere in the document other than the calendar
-                Event.on(document, "click", function(e) {
-                    var el = Event.getTarget(e);
-                    var dialogEl = dialog.element;
-                    if (el != dialogEl && !Dom.isAncestor(dialogEl, el) && el != showBtn && !Dom.isAncestor(showBtn, el)) {
-                        dialog.hide();
-                    }
-                });
+YAHOO.example.DynamicData = function() {
 
-                function resetHandler() {
-                    // Reset the current calendar page to the select date, or 
-                    // to today if nothing is selected.
-                    var selDates = calendar.getSelectedDates();
-                    var resetDate;
-        
-                    if (selDates.length > 0) {
-                        resetDate = selDates[0];
-                    } else {
-                        resetDate = calendar.today;
-                    }
-        
-                    calendar.cfg.setProperty("pagedate", resetDate);
-                    calendar.render();
-                }
-        
-                function closeHandler() {
-                    dialog.hide();
-                }
+    // Set initial request
+    var initialRequest = "offset=0&limit=20"
+    var info = '<a target="_blank" href="/xml/seismology/event/'
+    var url = "/seismology/event/getList?"
 
-                dialog = new YAHOO.widget.Dialog("container", {
-                    visible:false,
-                    context:["show", "tl", "bl"],
-                    buttons:[ {text:"Reset", handler: resetHandler, isDefault:true}, {text:"Close", handler: closeHandler}],
-                    draggable:false,
-                    close:true
-                });
-                dialog.setHeader('Pick A Date');
-                dialog.setBody('<div id="cal"></div>');
-                dialog.render(document.body);
+    // Column definitions
+    var myColumnDefs = [ 
+        {key:"magnitude", label:"Magnitude"},
+        {key:"datetime", label:"Date/Time"},
+        {key:"resource_name", label:'', className:'center', 
+             formatter: function (el, oRecord, oColumn, oData) {
+                 el.innerHTML = info + oData + '">[XML]<\/a> ' +
+                 info + oData + '?format=map">[HTML]<\/a>';
+             }},
+        {key:"resource_name", label:'', className:'center', 
+             formatter: function (el, oRecord, oColumn, oData) {
+                 el.innerHTML = 
+                 info + oData + '/.index?format=xhtml">[Indexes]<\/a> ' +
+                 info + oData + '/.meta?format=xhtml">[Metadata]<\/a>';
+             }}
+    ];
 
-                dialog.showEvent.subscribe(function() {
-                    if (YAHOO.env.ua.ie) {
-                        // Since we're hiding the table using yui-overlay-hidden, we 
-                        // want to let the dialog know that the content size has changed, when
-                        // shown
-                        dialog.fireEvent("changeContent");
-                    }
-                });
-            }
+    // DataSource instance
+    var myDS = new
+    YAHOO.util.DataSource(url);
+    myDS.responseType = YAHOO.util.DataSource.TYPE_XML;
+    myDS.responseSchema = {
+        resultNode: "Item", 
+        fields: [
+            {key:"magnitude"},
+            {key:"datetime"},
+            {key:"resource_name"}
+        ],
+        metaNode : "ResultSet",
+        metaFields: {
+            totalResultsAvailable: "totalResultsAvailable",
+            totalResultsReturned: "totalResultsReturned",
+            firstResultPosition: "firstResultPosition"
+        }
+    };
+    
+    var myRequestBuilder = function(oState, oSelf) {
+        // Get states or use defaults
+        oState = oState || {pagination: null, sortedBy: null};
+        var offset = (oState.pagination) ? oState.pagination.recordOffset : 0;
+        var limit = (oState.pagination) ? oState.pagination.rowsPerPage : null;
+        // Build custom request
+        return "&offset=" + offset + "&limit=" + limit;
+    };
 
-            // Lazy Calendar Creation - Wait to create the Calendar until the first time the button is clicked.
-            if (!calendar) {
+    // DataTable configuration
+    var myConfigs = {
+        initialRequest: initialRequest,
+        dynamicData: true,
+        paginator: new YAHOO.widget.Paginator({
+            rowsPerPage: 20, 
+            template: YAHOO.widget.Paginator.TEMPLATE_ROWS_PER_PAGE, 
+            rowsPerPageOptions: [10, 20, 50, 100],
+            alwaysVisible: true
+        }),
+        generateRequest: this.myRequestBuilder 
+    };
+    
+    // DataTable instance
+    var myDT = new YAHOO.widget.DataTable("dynamicdata", myColumnDefs, myDS, 
+                                          myConfigs);
 
-                calendar = new YAHOO.widget.Calendar("cal", {
-                    iframe:false,          // Turn iframe off, since container has iframe support.
-                    hide_blank_weeks:true  // Enable, to demonstrate how we handle changing height, using changeContent
-                });
-                calendar.render();
+    // Enable row highlighting
+    myDT.subscribe("rowMouseoverEvent", myDT.onEventHighlightRow);
+    myDT.subscribe("rowMouseoutEvent", myDT.onEventUnhighlightRow);
+    
+    // Update totalRecords on the fly with value from server
+    myDT.handleDataReturnPayload = function(oRequest, oResponse, oPayload) {
+        oPayload.totalRecords = oResponse.meta.totalResultsAvailable;
+        return oPayload;
+    }
 
-                calendar.selectEvent.subscribe(function() {
-                    if (calendar.getSelectedDates().length > 0) {
+    var handleStatus = function(e) {
+        var oCallback = {
+            success: myDT.onDataReturnInitializeTable,
+            failure: myDT.onDataReturnInitializeTable,
+            scope: myDT,
+            argument: myDT.getState()
+        }
+        var ir = myDT.get('initialRequest');
+        myDS.sendRequest(ir, oCallback);
+    }; 
 
-                        var selDate = calendar.getSelectedDates()[0];
-
-                        // Pretty Date Output, using Calendar's Locale values: Friday, 8 February 2008
-                        var wStr = calendar.cfg.getProperty("WEEKDAYS_LONG")[selDate.getDay()];
-                        var dStr = selDate.getDate();
-                        var mStr = calendar.cfg.getProperty("MONTHS_LONG")[selDate.getMonth()];
-                        var yStr = selDate.getFullYear();
-        
-                        Dom.get("date").value = wStr + ", " + dStr + " " + mStr + " " + yStr;
-                    } else {
-                        Dom.get("date").value = "";
-                    }
-                    dialog.hide();
-                });
-
-                calendar.renderEvent.subscribe(function() {
-                    // Tell Dialog it's contents have changed, which allows 
-                    // container to redraw the underlay (for IE6/Safari2)
-                    dialog.fireEvent("changeContent");
-                });
-            }
-
-            var seldate = calendar.getSelectedDates();
-
-            if (seldate.length > 0) {
-                // Set the pagedate to show the selected date if it exists
-                calendar.cfg.setProperty("pagedate", seldate[0]);
-                calendar.render();
-            }
-
-            dialog.show();
-        });
-    });
-
+    return {ds: myDS, dt: myDT};
+}();
 /* ]]> */
 </script>

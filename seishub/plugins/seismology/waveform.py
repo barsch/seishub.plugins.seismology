@@ -6,27 +6,27 @@ Seismology package for SeisHub.
 from lxml.etree import Element, SubElement as Sub
 from obspy.core import UTCDateTime
 from obspy.db.db import WaveformChannel, WaveformFile, WaveformPath
-from obspy.mseed.libmseed import LibMSEED
 from seishub.core import Component, implements
 from seishub.db.util import formatORMResults
 from seishub.exceptions import InternalServerError
-from seishub.packages.interfaces import IMapper
+from seishub.packages.interfaces import IMapper, IAdminPanel
 from seishub.util.xmlwrapper import toString
 from sqlalchemy import func
 import os
 
 
-#class WaveformPanel(Component):
-#    """
-#    """
-#    implements(IAdminPanel)
-#
-#    template = 'templates' + os.sep + 'waveforms.tmpl'
-#    panel_ids = ('seismology', 'Seismology', 'waveforms', 'Waveforms')
-#
-#    def render(self, request):
-#        data = {}
-#        return data
+class WaveformPanel(Component):
+    """
+    A waveform overview for the administrative web interface.
+    """
+    implements(IAdminPanel)
+
+    template = 'templates' + os.sep + 'waveforms.tmpl'
+    panel_ids = ('seismology', 'Seismology', 'waveforms', 'Waveforms')
+
+    def render(self, request):
+        data = {}
+        return data
 
 
 class WaveformNetworkIDMapper(Component):
@@ -39,7 +39,7 @@ class WaveformNetworkIDMapper(Component):
 
     def process_GET(self, request):
         session = self.env.db.session()
-        query = session.query(WaveformChannel.network.label('item'))
+        query = session.query(WaveformChannel.network)
         query = query.distinct()
         return formatORMResults(request, query)
 
@@ -55,7 +55,7 @@ class WaveformStationIDMapper(Component):
     def process_GET(self, request):
         network = request.args0.get('network_id', None)
         session = self.env.db.session()
-        query = session.query(WaveformChannel.station.label('item'))
+        query = session.query(WaveformChannel.station)
         query = query.distinct()
         if network:
             query = query.filter(WaveformChannel.network == network)
@@ -74,7 +74,7 @@ class WaveformLocationIDMapper(Component):
         network = request.args0.get('network_id', None)
         station = request.args0.get('station_id', None)
         session = self.env.db.session()
-        query = session.query(WaveformChannel.location.label('item'))
+        query = session.query(WaveformChannel.location)
         query = query.distinct()
         if network:
             query = query.filter(WaveformChannel.network == network)
@@ -96,7 +96,7 @@ class WaveformChannelIDMapper(Component):
         station = request.args0.get('station_id', None)
         location = request.args0.get('location_id', None)
         session = self.env.db.session()
-        query = session.query(WaveformChannel.channel.label('item'))
+        query = session.query(WaveformChannel.channel)
         query = query.distinct()
         if network:
             query = query.filter(WaveformChannel.network == network)
@@ -146,6 +146,7 @@ class WaveformLatencyMapper(Component):
 
 class WaveformPathMapper(Component):
     """
+    Generates a list of available waveform files.
     """
     implements(IMapper)
 
@@ -209,6 +210,7 @@ class WaveformPathMapper(Component):
 
 class WaveformCutterMapper(Component):
     """
+    Returns a requested waveform.
     """
     implements(IMapper)
 
@@ -262,6 +264,7 @@ class WaveformCutterMapper(Component):
             # ok lets use arclink
             return self._fetchFromArclink(request, start, end)
         # get from local waveform archive
+        from obspy.mseed.libmseed import LibMSEED
         ms = LibMSEED()
         file_dict = {}
         for result in results:

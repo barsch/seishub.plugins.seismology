@@ -33,20 +33,25 @@ class SeismicStationResourceType(Component):
     resourcetype_id = 'station'
 
     registerSchema('xsd' + os.sep + 'xml-seed-1.1.xsd', 'XMLSchema')
-    registerStylesheet('xslt' + os.sep + 'station_googlemaps_xhtml.xslt', 'map')
+    registerStylesheet('xslt' + os.sep + 'station_googlemaps_xhtml.xslt',
+                       'map')
     registerStylesheet('xslt' + os.sep + 'station_metadata.xslt', 'metadata')
 
     registerIndex('network_id',
-                  '/xseed/station_control_header#station_identifier/network_code',
+                  '/xseed/station_control_header#' + \
+                  'station_identifier/network_code',
                   'text')
     registerIndex('station_id',
-                  '/xseed/station_control_header#station_identifier/station_call_letters',
+                  '/xseed/station_control_header#' + \
+                  'station_identifier/station_call_letters',
                   'text')
     registerIndex('location_id',
-                  '/xseed/station_control_header/channel_identifier#location_identifier',
+                  '/xseed/station_control_header/channel_identifier#' + \
+                  'location_identifier',
                   'text')
     registerIndex('channel_id',
-                  '/xseed/station_control_header/channel_identifier#channel_identifier',
+                  '/xseed/station_control_header/channel_identifier#' + \
+                  'channel_identifier',
                   'text')
     registerIndex('station_name',
                   '/xseed/station_control_header#station_identifier/site_name',
@@ -61,13 +66,16 @@ class SeismicStationResourceType(Component):
                   '/xseed/station_control_header#station_identifier/elevation',
                   'float')
     registerIndex('start_datetime',
-                  '/xseed/station_control_header#station_identifier/start_effective_date',
+                  '/xseed/station_control_header#' + \
+                  'station_identifier/start_effective_date',
                   'datetime')
     registerIndex('end_datetime',
-                  '/xseed/station_control_header#station_identifier/end_effective_date',
+                  '/xseed/station_control_header#' + \
+                  'station_identifier/end_effective_date',
                   'datetime')
     registerIndex('quality',
-                  '/xseed/station_control_header#station_identifier/quality',
+                  '/xseed/station_control_header#' + \
+                  'station_identifier/quality',
                   'numeric')
 
 
@@ -134,6 +142,9 @@ class SeismicEventResourceType(Component):
 
 
 class FirstPickIndex(Component):
+    """
+    Indexes the date and time of the first pick of an event resource.
+    """
     implements(IProcessorIndex)
 
     package_id = 'seismology'
@@ -143,7 +154,8 @@ class FirstPickIndex(Component):
 
     def eval(self, document):
         # fetch all pick times
-        picks = document.getXml_doc().evalXPath('/event/pick/time/value/text()')
+        doc = document.getXml_doc()
+        picks = doc.evalXPath('/event/pick/time/value/text()')
         if not picks:
             return None
         # get first pick
@@ -156,6 +168,9 @@ class FirstPickIndex(Component):
 
 
 class LastPickIndex(Component):
+    """
+    Indexes the date and time of the last pick of an event resource.
+    """
     implements(IProcessorIndex)
 
     package_id = 'seismology'
@@ -165,7 +180,8 @@ class LastPickIndex(Component):
 
     def eval(self, document):
         # fetch all pick times
-        picks = document.getXml_doc().evalXPath('/event/pick/time/value/text()')
+        doc = document.getXml_doc()
+        picks = doc.evalXPath('/event/pick/time/value/text()')
         if not picks:
             return None
         # get last pick
