@@ -5,7 +5,7 @@ Seismology package for SeisHub.
 
 from seishub.core import Component, implements
 from seishub.packages.installer import registerIndex, registerSchema, \
-    registerStylesheet
+    registerStylesheet, registerAlias
 from seishub.packages.interfaces import IProcessorIndex, IPackage, \
     IResourceType
 from seishub.xmldb import index
@@ -139,6 +139,10 @@ class SeismicEventResourceType(Component):
                   'numeric')
     registerIndex('event_type', '/event/type', 'text')
     registerIndex('localisation_method', '/event/event_type/value', 'text')
+
+    registerAlias('/seismology/event/last20BigEvents',
+                  "/seismology/event[magnitude>=2.0] " + \
+                  "ORDER BY datetime ASC LIMIT 20")
 
 
 class FirstPickIndex(Component):
