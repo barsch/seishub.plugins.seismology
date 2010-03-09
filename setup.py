@@ -45,5 +45,5 @@ setup(
     install_requires=[
         'setuptools',
     ],
-    entry_points = {'seishub.plugins': ['seishub.plugins.seismology = seishub.plugins.seismology',]}, 
+    entry_points={'seishub.plugins': ['seishub.plugins.seismology = seishub.plugins.seismology', ]},
 )

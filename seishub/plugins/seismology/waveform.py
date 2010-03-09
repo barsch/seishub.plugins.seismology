@@ -11,7 +11,7 @@ from seishub.db.util import formatORMResults
 from seishub.exceptions import InternalServerError
 from seishub.packages.interfaces import IMapper, IAdminPanel
 from seishub.util.xmlwrapper import toString
-from sqlalchemy import func
+from sqlalchemy import func, Column
 import os
 
 
@@ -121,7 +121,7 @@ class WaveformLatencyMapper(Component):
         query = session.query(
             WaveformChannel.network, WaveformChannel.station,
             WaveformChannel.location, WaveformChannel.channel,
-            (func.max(WaveformChannel.endtime)).label('latency')
+            func.max(WaveformChannel.endtime).label('latency')
         )
         query = query.group_by(
             WaveformChannel.network, WaveformChannel.station,
@@ -207,6 +207,7 @@ class WaveformPathMapper(Component):
                 t = Sub(s, "file")
                 t.text = _j
         return toString(xml)
+
 
 class WaveformCutterMapper(Component):
     """
@@ -334,3 +335,70 @@ class WaveformCutterMapper(Component):
     def _checkPath(self, path):
         if not os.path.isdir(path):
             os.mkdir(path)
+
+
+class WaveformPreviewMapper(Component):
+    """
+    Returns a requested waveform preview.
+    """
+    implements(IMapper)
+
+    mapping_url = '/seismology/waveform/getWaveformPreview'
+
+    def process_GET(self, request):
+        # build up query
+        session = self.env.db.session()
+        query = session.query(WaveformChannel)
+        # process arguments
+        for key in ['network_id', 'station_id', 'location_id', 'channel_id']:
+            text = request.args0.get(key, None)
+            if text == None:
+                continue
+            col = getattr(WaveformChannel, key[:-3])
+            if text == "":
+                query = query.filter(col == None)
+            elif '*' in text or '?' in text:
+                text = text.replace('?', '_')
+                text = text.replace('*', '%')
+                query = query.filter(col.like(text))
+            else:
+                query = query.filter(col == text)
+        # start and end time
+        try:
+            start = request.args0.get('start_datetime')
+            start = UTCDateTime(start)
+        except:
+            start = UTCDateTime() - 60 * 20
+        finally:
+            query = query.filter(WaveformChannel.endtime > start.datetime)
+        try:
+            end = request.args0.get('end_datetime')
+            end = UTCDateTime(end)
+        except:
+            # 10 minutes
+            end = UTCDateTime()
+        finally:
+            query = query.filter(WaveformChannel.starttime < end.datetime)
+        # execute query
+        results = query.all()
+        # create Stream
+        from obspy.core import Stream
+        st = Stream()
+        for result in results:
+            st.append(result.getPreview())
+        #import pdb;pdb.set_trace()
+        # merge and trim
+        # XXX: fails yet!
+        st.merge(fill_value=0)
+        st.trim(start, end)
+        # temporary file
+        from obspy.core.util import NamedTemporaryFile
+        temp = NamedTemporaryFile().name
+        st.write(temp, format='MSEED')
+        data = open(temp, 'rb').read()
+        os.remove(temp)
+        # generate correct header
+        request.setHeader('content-type', 'binary/octet-stream')
+        # disable content encoding like packing!
+        request.received_headers["accept-encoding"] = ""
+        return data
