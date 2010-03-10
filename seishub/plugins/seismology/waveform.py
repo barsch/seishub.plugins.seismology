@@ -11,8 +11,9 @@ from seishub.db.util import formatORMResults
 from seishub.exceptions import InternalServerError
 from seishub.packages.interfaces import IMapper, IAdminPanel
 from seishub.util.xmlwrapper import toString
-from sqlalchemy import func, Column
+from sqlalchemy import func
 import os
+import pickle
 
 
 class WaveformPanel(Component):
@@ -343,7 +344,7 @@ class WaveformPreviewMapper(Component):
     """
     implements(IMapper)
 
-    mapping_url = '/seismology/waveform/getWaveformPreview'
+    mapping_url = '/seismology/waveform/getPreview'
 
     def process_GET(self, request):
         # build up query
@@ -386,17 +387,11 @@ class WaveformPreviewMapper(Component):
         st = Stream()
         for result in results:
             st.append(result.getPreview())
-        #import pdb;pdb.set_trace()
         # merge and trim
-        # XXX: fails yet!
         st.merge(fill_value=0)
         st.trim(start, end)
-        # temporary file
-        from obspy.core.util import NamedTemporaryFile
-        temp = NamedTemporaryFile().name
-        st.write(temp, format='MSEED')
-        data = open(temp, 'rb').read()
-        os.remove(temp)
+        # pickle
+        data = pickle.dumps(st)
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
         # disable content encoding like packing!
