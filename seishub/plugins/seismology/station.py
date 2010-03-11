@@ -177,14 +177,12 @@ class StationListMapper(Component):
         # parse input arguments
         tab = Table('/seismology/station', request.env.db.metadata,
                     autoload=True)
-        import pdb;pdb.set_trace()
         # fetch arguments
         try:
             limit = int(request.args0.get('limit'))
-            offset = int(request.args0.get('offset', 0))
         except:
             limit = None
-            offset = 0
+        offset = int(request.args0.get('offset', 0))
         # build up query
         columns = [tab.c['document_id'], tab.c['package_id'],
                    tab.c['resourcetype_id'], tab.c['resource_name'],
