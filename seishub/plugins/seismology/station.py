@@ -177,6 +177,7 @@ class StationListMapper(Component):
         # parse input arguments
         tab = Table('/seismology/station', request.env.db.metadata,
                     autoload=True)
+        import pdb;pdb.set_trace()
         # fetch arguments
         try:
             limit = int(request.args0.get('limit'))
