@@ -60,7 +60,9 @@ class WaveformStationIDMapper(Component):
         query = query.distinct()
         if network:
             query = query.filter(WaveformChannel.network == network)
-        return formatORMResults(request, query)
+        data = formatORMResults(request, query)
+        session.close()
+        return data
 
 
 class WaveformLocationIDMapper(Component):
@@ -81,7 +83,10 @@ class WaveformLocationIDMapper(Component):
             query = query.filter(WaveformChannel.network == network)
         if station:
             query = query.filter(WaveformChannel.station == station)
-        return formatORMResults(request, query)
+        data = formatORMResults(request, query)
+        session.close()
+        return data
+
 
 
 class WaveformChannelIDMapper(Component):
@@ -105,7 +110,10 @@ class WaveformChannelIDMapper(Component):
             query = query.filter(WaveformChannel.station == station)
         if location:
             query = query.filter(WaveformChannel.location == location)
-        return formatORMResults(request, query)
+        data = formatORMResults(request, query)
+        session.close()
+        return data
+
 
 
 class WaveformLatencyMapper(Component):
@@ -142,7 +150,10 @@ class WaveformLatencyMapper(Component):
                 query = query.filter(col.like(text))
             else:
                 query = query.filter(col == text)
-        return formatORMResults(request, query)
+        data = formatORMResults(request, query)
+        session.close()
+        return data
+
 
 
 class WaveformPathMapper(Component):
@@ -207,6 +218,7 @@ class WaveformPathMapper(Component):
             for _j in file_dict[_i]:
                 t = Sub(s, "file")
                 t.text = _j
+        session.close()
         return toString(xml)
 
 
@@ -261,6 +273,7 @@ class WaveformCutterMapper(Component):
             query = query.filter(WaveformChannel.starttime < end.datetime)
         # execute query
         results = query.all()
+        session.close()
         # check for results
         if len(results) == 0:
             # ok lets use arclink
@@ -382,6 +395,7 @@ class WaveformPreviewMapper(Component):
             query = query.filter(WaveformChannel.starttime < end.datetime)
         # execute query
         results = query.all()
+        session.close()
         # create Stream
         from obspy.core import Stream
         st = Stream()
