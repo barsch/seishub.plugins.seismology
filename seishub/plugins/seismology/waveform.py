@@ -4,9 +4,10 @@ Seismology package for SeisHub.
 """
 
 from lxml.etree import Element, SubElement as Sub
-from obspy.core import UTCDateTime
+from obspy.core import UTCDateTime, Stream, read
 from obspy.db.db import WaveformChannel, WaveformFile, WaveformPath
 from seishub.core import Component, implements
+from obspy.core.util import NamedTemporaryFile
 from seishub.db.util import formatORMResults
 from seishub.exceptions import InternalServerError
 from seishub.packages.interfaces import IMapper, IAdminPanel
@@ -238,7 +239,8 @@ class WaveformCutterMapper(Component):
                               WaveformChannel.network,
                               WaveformChannel.station,
                               WaveformChannel.location,
-                              WaveformChannel.channel)
+                              WaveformChannel.channel,
+                              WaveformFile.format)
         query = query.filter(WaveformPath.id == WaveformFile.path_id)
         query = query.filter(WaveformFile.id == WaveformChannel.file_id)
         # process arguments
@@ -279,16 +281,24 @@ class WaveformCutterMapper(Component):
             # ok lets use arclink
             return self._fetchFromArclink(request, start, end)
         # get from local waveform archive
-        from obspy.mseed.libmseed import LibMSEED
-        ms = LibMSEED()
-        file_dict = {}
+        stream = Stream()
         for result in results:
             fname = result[0] + os.sep + result[1]
-            key = '%s.%s.%s.%s' % (result[2], result[3], result[4], result[5])
-            file_dict.setdefault(key, []).append(fname)
-        data = ''
-        for id in file_dict.keys():
-            data += ms.mergeAndCutMSFiles(file_dict[id], start, end)
+            try:
+                st = read(fname, format=result[6])
+            except:
+                continue
+            st.trim(start, end)
+            for tr in st:
+                stream.append(tr)
+        # XXX: very ugly as not StringIO can be used ...
+        temp = NamedTemporaryFile().name
+        stream.write(temp, format="MSEED")
+        fh = open(temp, 'rb')
+        data = fh.read()
+        fh.close()
+        os.remove(temp)
+        # write
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
         # disable content encoding like packing!
@@ -312,8 +322,7 @@ class WaveformCutterMapper(Component):
             st = c.getWaveform(nid, sid, lid, cid, start, end)
         except Exception, e:
             raise InternalServerError(e)
-        # merge + cut
-        #st.merge()
+        # cut
         st.trim(start, end)
         # write to arclink directory for request
         rpath = os.path.join(self.env.getSeisHubPath(), 'data', 'arclink')
