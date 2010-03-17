@@ -285,7 +285,8 @@ class WaveformCutterMapper(Component):
         for result in results:
             fname = result[0] + os.sep + result[1]
             try:
-                st = read(fname, format=result[6])
+                st = read(fname, format=result[6], starttime=start,
+                          endtime=end)
             except:
                 continue
             st.trim(start, end)
@@ -406,7 +407,6 @@ class WaveformPreviewMapper(Component):
         results = query.all()
         session.close()
         # create Stream
-        from obspy.core import Stream
         st = Stream()
         for result in results:
             st.append(result.getPreview())
