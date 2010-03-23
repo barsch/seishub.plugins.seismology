@@ -273,33 +273,40 @@ class WaveformCutterMapper(Component):
             end = UTCDateTime()
         finally:
             query = query.filter(WaveformChannel.starttime < end.datetime)
+        apply_filter = request.args0.get('apply_filter', None)
         # execute query
         results = query.all()
         session.close()
         # check for results
+        stream = Stream()
         if len(results) == 0:
             # ok lets use arclink
-            return self._fetchFromArclink(request, start, end)
-        # get from local waveform archive
-        stream = Stream()
-        for result in results:
-            fname = result[0] + os.sep + result[1]
             try:
-                st = read(fname, format=result[6], starttime=start,
-                          endtime=end)
+                stream = self._fetchFromArclink(request, start, end)
             except:
-                continue
-            st.trim(start, end)
-            for tr in st:
-                stream.append(tr)
-        # XXX: very ugly as not StringIO can be used ...
-        temp = NamedTemporaryFile().name
-        stream.write(temp, format="MSEED")
-        fh = open(temp, 'rb')
-        data = fh.read()
-        fh.close()
-        os.remove(temp)
-        # write
+                pass
+        else:
+            # get from local waveform archive
+            for result in results:
+                fname = result[0] + os.sep + result[1]
+                try:
+                    # XXX: start/end is buggy!
+                    # st = read(fname, format=result[6], starttime=start,
+                    #          endtime=end)
+                    st = read(fname, format=result[6])
+                except:
+                    continue
+                # trim
+                st.trim(start, end)
+                for tr in st:
+                    if apply_filter is not None:
+                        tr.stats.network = result[2]
+                        tr.stats.station = result[3]
+                        tr.stats.location = result[4]
+                        tr.stats.channel = result[5]
+                    stream.append(tr)
+        # pickle stream
+        data = pickle.dumps(stream)
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
         # disable content encoding like packing!
@@ -325,13 +332,8 @@ class WaveformCutterMapper(Component):
             raise InternalServerError(e)
         # cut
         st.trim(start, end)
-        # write to arclink directory for request
-        rpath = os.path.join(self.env.getSeisHubPath(), 'data', 'arclink')
-        rfile = os.path.join(rpath, 'request%d' % UTCDateTime().timestamp)
-        # XXX: args have to create temp files .... issue with obspy.mseed, or
-        # actually issue with ctypes not accepting StringIO as filehandler ...
-        st.write(rfile, format='MSEED')
         # write to arclink directory
+        rpath = os.path.join(self.env.getSeisHubPath(), 'data', 'arclink')
         for tr in st:
             # network directory
             path = os.path.join(rpath, tr.stats.network)
@@ -345,16 +347,7 @@ class WaveformCutterMapper(Component):
             file = tr.getId() + '.%d.%d.mseed' % (tr.stats.starttime.timestamp,
                                                   tr.stats.endtime.timestamp)
             tr.write(os.path.join(path, file), format='MSEED')
-        # generate correct header
-        request.setHeader('content-type', 'binary/octet-stream')
-        # disable content encoding like packing!
-        request.received_headers["accept-encoding"] = ""
-        # XXX: again very ugly as not StringIO can be used ...
-        fh = open(rfile, 'rb')
-        data = fh.read()
-        fh.close()
-        os.remove(rfile)
-        return data
+        return st
 
     def _checkPath(self, path):
         if not os.path.isdir(path):
