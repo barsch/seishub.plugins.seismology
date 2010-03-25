@@ -305,7 +305,7 @@ class WaveformCutterMapper(Component):
                         tr.stats.channel = result[5]
                     stream.append(tr)
         # pickle stream
-        data = pickle.dumps(stream, protocol=2)
+        data = pickle.dumps(stream, protocol=1)
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
         # disable content encoding like packing!
@@ -365,20 +365,6 @@ class WaveformPreviewMapper(Component):
         # build up query
         session = self.env.db.session()
         query = session.query(WaveformChannel)
-        # process arguments
-        for key in ['network_id', 'station_id', 'location_id', 'channel_id']:
-            text = request.args0.get(key, None)
-            if text == None:
-                continue
-            col = getattr(WaveformChannel, key[:-3])
-            if text == "":
-                query = query.filter(col == None)
-            elif '*' in text or '?' in text:
-                text = text.replace('?', '_')
-                text = text.replace('*', '%')
-                query = query.filter(col.like(text))
-            else:
-                query = query.filter(col == text)
         # start and end time
         try:
             start = request.args0.get('start_datetime')
@@ -395,6 +381,20 @@ class WaveformPreviewMapper(Component):
             end = UTCDateTime()
         finally:
             query = query.filter(WaveformChannel.starttime < end.datetime)
+        # process arguments
+        for key in ['network_id', 'station_id', 'location_id', 'channel_id']:
+            text = request.args0.get(key, None)
+            if text == None:
+                continue
+            col = getattr(WaveformChannel, key[:-3])
+            if text == "":
+                query = query.filter(col == None)
+            elif '*' in text or '?' in text:
+                text = text.replace('?', '_')
+                text = text.replace('*', '%')
+                query = query.filter(col.like(text))
+            else:
+                query = query.filter(col == text)
         # execute query
         results = query.all()
         session.close()
@@ -406,7 +406,7 @@ class WaveformPreviewMapper(Component):
         st.merge(fill_value=0)
         st.trim(start, end)
         # pickle
-        data = pickle.dumps(st, protocol=2)
+        data = pickle.dumps(st, protocol=1)
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
         # disable content encoding like packing!
