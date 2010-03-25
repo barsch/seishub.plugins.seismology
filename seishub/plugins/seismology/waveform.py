@@ -7,7 +7,6 @@ from lxml.etree import Element, SubElement as Sub
 from obspy.core import UTCDateTime, Stream, read
 from obspy.db.db import WaveformChannel, WaveformFile, WaveformPath
 from seishub.core import Component, implements
-from obspy.core.util import NamedTemporaryFile
 from seishub.db.util import formatORMResults
 from seishub.exceptions import InternalServerError
 from seishub.packages.interfaces import IMapper, IAdminPanel
@@ -306,7 +305,7 @@ class WaveformCutterMapper(Component):
                         tr.stats.channel = result[5]
                     stream.append(tr)
         # pickle stream
-        data = pickle.dumps(stream)
+        data = pickle.dumps(stream, protocol=2)
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
         # disable content encoding like packing!
@@ -407,7 +406,7 @@ class WaveformPreviewMapper(Component):
         st.merge(fill_value=0)
         st.trim(start, end)
         # pickle
-        data = pickle.dumps(st)
+        data = pickle.dumps(st, protocol=2)
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
         # disable content encoding like packing!
