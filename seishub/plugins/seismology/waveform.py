@@ -304,8 +304,10 @@ class WaveformCutterMapper(Component):
                         tr.stats.location = result[4]
                         tr.stats.channel = result[5]
                     stream.append(tr)
+                del st
         # pickle stream
         data = pickle.dumps(stream, protocol=1)
+        del stream
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
         # disable content encoding like packing!
