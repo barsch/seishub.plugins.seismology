@@ -20,6 +20,178 @@
 
 <h1>Waveforms</h1>
 
+
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/fonts/fonts-min.css" />
+<script type="text/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+<script type="text/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/json/json-min.js"></script>
+
+<script type="text/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/element/element-min.js"></script>
+<script type="text/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/datasource/datasource-min.js"></script>
+<script type="text/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/swf/swf-min.js"></script>
+<script type="text/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/charts/charts-min.js"></script>
+
+
+<!--begin custom header content for this example-->
+<style type="text/css">
+    #chart
+    {
+        width: 500px;
+        height: 350px;
+    }
+
+    .chart_title
+    {
+        display: block;
+        font-size: 1.2em;
+        font-weight: bold;
+        margin-bottom: 0.4em;
+    }
+</style>
+<!--end custom header content for this example-->
+
+
+<!--BEGIN SOURCE CODE FOR EXAMPLE =============================== -->
+
+<span class="chart_title">Monthly Expenses</span>
+<div id="chart">Unable to load Flash content. The YUI Charts Control requires Flash Player 9.0.45 or higher. You can download the latest version of Flash Player from the <a href="http://www.adobe.com/go/getflashplayer">Adobe Flash Player Download Center</a>.</p></div>
+
+<script type="text/javascript">
+
+    YAHOO.widget.Chart.SWFURL = "http://yui.yahooapis.com/2.8.0r4/build/charts/assets/charts.swf";
+
+//--- data
+
+    YAHOO.example.monthlyExpenses =
+    [
+        { x: 2.0, t: 0 },
+        { x: -2.0, t: 1 },
+        { x: 1.0, t: 2 },
+        { x: -1.0, t: 3 },
+        { x: 3.0, t: 4 },
+        { x: -3.0, t: 5 },
+        { x: 2.0, t: 6 },
+        { x: -2.0, t: 7 },
+        { x: 1.0, t: 8 },
+        { x: -1.0, t: 9 },
+        { x: 3.0, t: 10 },
+        { x: -3.0, t: 11 },
+        { x: 2.0, t: 12 },
+        { x: -2.0, t: 13 },
+        { x: 1.0, t: 14 },
+        { x: -1.0, t: 15 },
+        { x: 3.0, t: 16 },
+        { x: -3.0, t: 17 },
+        { x: 2.0, t: 18 },
+        { x: -2.0, t: 19 },
+        { x: 1.0, t: 20 },
+        { x: -1.0, t: 21 },
+        { x: 3.0, t: 22 },
+        { x: -3.0, t: 23 },
+        { x: 2.0, t: 24 },
+        { x: -2.0, t: 25 },
+        { x: 1.0, t: 26 },
+        { x: -1.0, t: 27 },
+        { x: 3.0, t: 28 },
+        { x: -3.0, t: 29 },
+        { x: 2.0, t: 30 },
+        { x: -2.0, t: 31 },
+        { x: 1.0, t: 32 },
+        { x: -1.0, t: 33 },
+        { x: 3.0, t: 34 },
+        { x: -3.0, t: 35 },
+        { x: 2.0, t: 36 },
+        { x: -2.0, t: 37 },
+        { x: 1.0, t: 38 },
+        { x: -1.0, t: 39 },
+        { x: 2.0, t: 40 },
+        { x: -2.0, t: 41 },
+        { x: 1.0, t: 42 },
+        { x: -1.0, t: 43 },
+        { x: 3.0, t: 44 },
+        { x: -3.0, t: 45 },
+        { x: 2.0, t: 46 },
+        { x: -2.0, t: 47 },
+        { x: 1.0, t: 48 },
+        { x: -1.0, t: 49 },
+        { x: 2.0, t: 60 },
+        { x: -2.0, t: 61 },
+        { x: 1.0, t: 62 },
+        { x: -1.0, t: 63 },
+        { x: 3.0, t: 64 },
+        { x: -3.0, t: 65 },
+        { x: 2.0, t: 66 },
+        { x: -2.0, t: 67 },
+        { x: 1.0, t: 68 },
+        { x: -1.0, t: 69 },
+        { x: 2.0, t: 70 },
+        { x: -2.0, t: 71 },
+        { x: 1.0, t: 72 },
+        { x: -1.0, t: 73 },
+        { x: 3.0, t: 74 },
+        { x: -3.0, t: 75 },
+        { x: 2.0, t: 76 },
+        { x: -2.0, t: 77 },
+        { x: 1.0, t: 78 },
+        { x: -1.0, t: 79 },
+        { x: 2.0, t: 80 },
+        { x: -2.0, t: 81 },
+        { x: 1.0, t: 82 },
+        { x: -1.0, t: 83 },
+        { x: 3.0, t: 84 },
+        { x: -3.0, t: 85 },
+        { x: 2.0, t: 86 },
+        { x: -2.0, t: 87 },
+        { x: 1.0, t: 88 },
+        { x: -1.0, t: 89 },
+        { x: 2.0, t: 90 },
+        { x: -2.0, t: 91 },
+        { x: 1.0, t: 92 },
+        { x: -1.0, t: 93 },
+        { x: 3.0, t: 94 },
+        { x: -3.0, t: 95 },
+        { x: 2.0, t: 96 },
+        { x: -2.0, t: 97 },
+        { x: 1.0, t: 98 },
+        { x: -1.0, t: 99 },
+        { x: 2.0, t: 100 },
+    ];
+
+    var myDataSource = new YAHOO.util.DataSource( YAHOO.example.monthlyExpenses );
+    myDataSource.responseType = YAHOO.util.DataSource.TYPE_JSARRAY;
+    myDataSource.responseSchema =
+    {
+        fields: [ "x", "t"]
+    };
+
+//--- chart
+
+    var seriesDef =
+    [
+        { displayName: "x", yField: "x" }
+    ];
+
+    YAHOO.example.formatCurrencyAxisLabel = function( value )
+    {
+        return YAHOO.util.Number.format( value,
+        {
+            prefix: "$",
+            thousandsSeparator: ",",
+            decimalPlaces: 2
+        });
+    }
+
+    var mychart = new YAHOO.widget.LineChart( "chart", myDataSource,
+    {
+        series: seriesDef,
+        xField: "t",
+        //only needed for flash player express install
+        expressInstall: "assets/expressinstall.swf"
+    });
+
+</script>
+<!--END SOURCE CODE FOR EXAMPLE =============================== -->
+
+
 <form method="POST" id="filter" action="">
   <fieldset id="filter_fieldset">
     <legend>Filter</legend>
@@ -91,6 +263,7 @@ YAHOO.util.Event.onContentReady("network_id", function () {
     var url = "/seismology/waveform/getNetworkIds?format=json";
     YAHOO.util.Connect.asyncRequest('GET', url, callback);
 });
+
 
 /* ]]> */
 </script>

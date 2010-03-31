@@ -109,15 +109,12 @@ class StationPanel(Component):
         sid = request.args0.get('station_id', False)
         status = request.args0.get('status', '')
         # reset + defaults
-        if nid == '*':
-            nid = False
-            sid = False
-        elif sid == '*' or nid_changed:
-            sid = False
+        if nid == '*' or nid_changed:
+            sid = '*'
         # set data
         data = {}
-        data['network_id'] = nid or ''
-        data['station_id'] = sid or ''
+        data['network_id'] = nid or '*'
+        data['station_id'] = sid or '*'
         data['status'] = status or ''
         data['network_ids'] = self._getNetworkIDs()
         data['station_ids'] = self._getStationIDs(nid)
@@ -190,18 +187,17 @@ class StationListMapper(Component):
                    tab.c['station_name'], tab.c['latitude'],
                    tab.c['longitude'], tab.c['elevation'], tab.c['quality'],
                    tab.c['start_datetime'], tab.c['end_datetime']]
-        query = sql.select(columns, limit=limit, distinct=True,
-                           offset=offset, order_by=[tab.c['network_id'],
-                                                    tab.c['station_id'],
-                                                    tab.c['start_datetime']])
+        query = sql.select(columns, distinct=True,
+                           order_by=[tab.c['network_id'],
+                                     tab.c['station_id'],
+                                     tab.c['start_datetime']])
         # process arguments
         # datetime
         try:
             datetime = UTCDateTime(request.args0.get('datetime')).datetime
             query = query.where(tab.c['start_datetime'] <= datetime)
-            query = query.where(
-                sql.or_(tab.c['end_datetime'] >= datetime,
-                        tab.c['end_datetime'] == None))
+            query = query.where(sql.or_(tab.c['end_datetime'] >= datetime,
+                                        tab.c['end_datetime'] == None))
         except:
             pass
         # status
@@ -216,26 +212,30 @@ class StationListMapper(Component):
         # network, station, location. channel
         for col in ['network_id', 'station_id', 'location_id', 'channel_id']:
             text = request.args0.get(col, None)
-            if not text:
+            if text is None:
                 continue
-            if '*' in text or '?' in text:
+            elif text == '':
+                query = query.where(tab.c[col] == None)
+            elif '*' in text or '?' in text:
                 text = text.replace('?', '_')
                 text = text.replace('*', '%')
                 query = query.where(tab.c[col].like(text))
             else:
                 query = query.where(tab.c[col] == text)
         # execute query
+        import time
+        a = time.time()
         try:
-            results = request.env.db.query(query)
+            results = request.env.db.query(query.offset(offset).limit(limit))
         except:
             results = []
-        # count all distinct values
-        columns = [tab.c['document_id'], tab.c['start_datetime']]
-        query = sql.select(columns, distinct=True).count()
-        # execute query
+        print time.time() - a
         try:
-            count = request.env.db.query(query).fetchone()[0]
+            count = len([1 for _i in request.env.db.query(query)])
         except:
             count = 0
+        a = time.time()
+        print time.time() - a
+        print count, limit, offset
         return formatResults(request, results, limit=limit, offset=offset,
                              count=count, build_url=True)
