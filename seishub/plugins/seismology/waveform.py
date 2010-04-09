@@ -306,7 +306,7 @@ class WaveformCutterMapper(Component):
                     stream.append(tr)
                 del st
         # pickle stream
-        data = pickle.dumps(stream, protocol=1)
+        data = pickle.dumps(stream, protocol=2)
         del stream
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
@@ -408,7 +408,7 @@ class WaveformPreviewMapper(Component):
         st.merge(fill_value=0)
         st.trim(start, end)
         # pickle
-        data = pickle.dumps(st, protocol=1)
+        data = pickle.dumps(st, protocol=2)
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
         # disable content encoding like packing!
