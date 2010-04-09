@@ -223,19 +223,13 @@ class StationListMapper(Component):
             else:
                 query = query.where(tab.c[col] == text)
         # execute query
-        import time
-        a = time.time()
         try:
             results = request.env.db.query(query.offset(offset).limit(limit))
         except:
             results = []
-        print time.time() - a
         try:
             count = len([1 for _i in request.env.db.query(query)])
         except:
             count = 0
-        a = time.time()
-        print time.time() - a
-        print count, limit, offset
         return formatResults(request, results, limit=limit, offset=offset,
                              count=count, build_url=True)
