@@ -289,10 +289,8 @@ class WaveformCutterMapper(Component):
             for result in results:
                 fname = result[0] + os.sep + result[1]
                 try:
-                    # XXX: start/end is buggy!
-                    # st = read(fname, format=result[6], starttime=start,
-                    #          endtime=end)
-                    st = read(fname, format=result[6])
+                    st = read(fname, format=result[6], starttime=start,
+                              endtime=end)
                 except:
                     continue
                 # trim
