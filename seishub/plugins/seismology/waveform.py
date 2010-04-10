@@ -41,8 +41,10 @@ class WaveformNetworkIDMapper(Component):
     def process_GET(self, request):
         session = self.env.db.session()
         query = session.query(WaveformChannel.network)
-        query = query.distinct()
-        return formatORMResults(request, query)
+        query = query.group_by(WaveformChannel.network)
+        data = formatORMResults(request, query)
+        session.close()
+        return data
 
 
 class WaveformStationIDMapper(Component):
@@ -57,9 +59,9 @@ class WaveformStationIDMapper(Component):
         network = request.args0.get('network_id', None)
         session = self.env.db.session()
         query = session.query(WaveformChannel.station)
-        query = query.distinct()
         if network:
             query = query.filter(WaveformChannel.network == network)
+        query = query.group_by(WaveformChannel.station)
         data = formatORMResults(request, query)
         session.close()
         return data
@@ -78,11 +80,11 @@ class WaveformLocationIDMapper(Component):
         station = request.args0.get('station_id', None)
         session = self.env.db.session()
         query = session.query(WaveformChannel.location)
-        query = query.distinct()
         if network:
             query = query.filter(WaveformChannel.network == network)
         if station:
             query = query.filter(WaveformChannel.station == station)
+        query = query.group_by(WaveformChannel.location)
         data = formatORMResults(request, query)
         session.close()
         return data
@@ -103,13 +105,13 @@ class WaveformChannelIDMapper(Component):
         location = request.args0.get('location_id', None)
         session = self.env.db.session()
         query = session.query(WaveformChannel.channel)
-        query = query.distinct()
         if network:
             query = query.filter(WaveformChannel.network == network)
         if station:
             query = query.filter(WaveformChannel.station == station)
         if location:
             query = query.filter(WaveformChannel.location == location)
+        query = query.group_by(WaveformChannel.channel)
         data = formatORMResults(request, query)
         session.close()
         return data
@@ -308,8 +310,6 @@ class WaveformCutterMapper(Component):
         del stream
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
-        # disable content encoding like packing!
-        request.received_headers["accept-encoding"] = ""
         return data
 
     def _fetchFromArclink(self, request, start, end):
@@ -409,6 +409,4 @@ class WaveformPreviewMapper(Component):
         data = pickle.dumps(st, protocol=2)
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
-        # disable content encoding like packing!
-        request.received_headers["accept-encoding"] = ""
         return data
