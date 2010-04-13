@@ -11,7 +11,7 @@ from seishub.db.util import formatORMResults
 from seishub.exceptions import InternalServerError
 from seishub.packages.interfaces import IMapper, IAdminPanel
 from seishub.util.xmlwrapper import toString
-from sqlalchemy import func
+from sqlalchemy import func, or_, and_
 import os
 import pickle
 
@@ -395,6 +395,20 @@ class WaveformPreviewMapper(Component):
                 query = query.filter(col.like(text))
             else:
                 query = query.filter(col == text)
+        # filter over id list
+        trace_ids = request.args0.get('trace_ids', '')
+        trace_filter = or_()
+        for trace_id in trace_ids.split(','):
+            temp = trace_id.split('.')
+            if len(temp)!=4:
+               continue
+            trace_filter.append(and_(
+                WaveformChannel.network = temp[0],
+                WaveformChannel.station = temp[1],
+                WaveformChannel.location = temp[2],
+                WaveformChannel.channel = temp[3]))
+        if trace_filter.clauses:
+            query = query.filter(trace_filter)
         # execute query
         results = query.all()
         session.close()
