@@ -400,13 +400,13 @@ class WaveformPreviewMapper(Component):
         trace_filter = or_()
         for trace_id in trace_ids.split(','):
             temp = trace_id.split('.')
-            if len(temp)!=4:
+            if len(temp) != 4:
                continue
             trace_filter.append(and_(
-                WaveformChannel.network = temp[0],
-                WaveformChannel.station = temp[1],
-                WaveformChannel.location = temp[2],
-                WaveformChannel.channel = temp[3]))
+                WaveformChannel.network == temp[0],
+                WaveformChannel.station == temp[1],
+                WaveformChannel.location == temp[2],
+                WaveformChannel.channel == temp[3]))
         if trace_filter.clauses:
             query = query.filter(trace_filter)
         # execute query
