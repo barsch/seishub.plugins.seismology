@@ -223,10 +223,7 @@ class StationListMapper(Component):
             else:
                 query = query.where(tab.c[col] == text)
         # execute query
-        try:
-            results = request.env.db.query(query.offset(offset).limit(limit))
-        except:
-            results = []
+        results = request.env.db.query(query.offset(offset).limit(limit))
         try:
             count = len([1 for _i in request.env.db.query(query)])
         except:

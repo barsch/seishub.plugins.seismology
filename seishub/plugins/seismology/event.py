@@ -40,13 +40,11 @@ class EventListMapper(Component):
         # fetch arguments
         try:
             limit = int(request.args0.get('limit'))
-            offset = int(request.args0.get('offset', 0))
         except:
             limit = None
-            offset = 0
-        oncl = sql.and_(1 == 1)
+        offset = int(request.args0.get('offset', 0))
         # build up query
-        query = sql.select([tab], oncl, limit=limit, offset=offset)
+        query = sql.select([tab])
         # process arguments
         # this is a string value, it returns None if nothing is given
         temp = request.args0.get('localisation_method')
@@ -87,10 +85,7 @@ class EventListMapper(Component):
             except:
                 pass
         # execute query
-        try:
-            results = request.env.db.query(query)
-        except:
-            results = []
+        results = request.env.db.query(query.offset(offset).limit(limit))
         # ok count all distinct values
         query = sql.select([sql.func.count(tab.c['document_id'].distinct())])
         # execute query
