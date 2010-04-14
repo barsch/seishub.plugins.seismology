@@ -126,8 +126,9 @@ class StationPanel(Component):
         """
         # network
         query = sql.text("""
-            SELECT DISTINCT(network_id) 
+            SELECT network_id 
             FROM "/seismology/station"
+            GROUP BY network_id
             ORDER BY network_id
         """)
         # execute query
@@ -145,9 +146,10 @@ class StationPanel(Component):
         if not network_id:
             return []
         query = sql.text("""
-            SELECT DISTINCT(station_id) 
+            SELECT station_id 
             FROM "/seismology/station"
             WHERE network_id = :network_id
+            GROUP BY station_id
             ORDER BY station_id
         """)
         # execute query

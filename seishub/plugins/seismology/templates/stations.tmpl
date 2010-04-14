@@ -102,18 +102,24 @@ YAHOO.example.DynamicData = function() {
         {key:"elevation", label:"Elevation [m]"},
         {key:"start_datetime", label:"Start Date/Time"},
         {key:"end_datetime", label:"End Date/Time"},
-        {key:"resource_name", label:'', className:'center', 
+        {key:"resource_name", label:"Resource", className:'center', 
              formatter: function (el, oRecord, oColumn, oData) {
                  el.innerHTML = info + oData + '">[XSEED]<\/a> ' +
-                 info + oData + '?format=dataless">[Dataless]<\/a> ' +
-                 info + oData + '?format=resp">[RESP]<\/a> ' +
-                 info + oData + '?format=map">[HTML]<\/a>';
+                     info + oData + '?format=dataless">[Dataless]<\/a> ' +
+                     info + oData + '?format=resp">[RESP]<\/a> ' +
+                     info + oData + '?format=map">[MAP]<\/a>';
              }},
-        {key:"resource_name", label:'', className:'center', 
+        {key:"resource_name", label:"Indexes", className:'center', 
              formatter: function (el, oRecord, oColumn, oData) {
-                 el.innerHTML = 
-                 info + oData + '/.index?format=xhtml">[Indexes]<\/a> ' +
-                 info + oData + '/.meta?format=xhtml">[Metadata]<\/a>';
+                 el.innerHTML = info + oData + '/.index">[XML]<\/a> ' +
+                     info + oData + '/.index?format=json">[JSON]<\/a> ' +
+                     info + oData + '/.index?format=xhtml">[XHTML]<\/a>';
+             }},
+        {key:"resource_name", label:'Meta Data', className:'center', 
+             formatter: function (el, oRecord, oColumn, oData) {
+                 el.innerHTML = info + oData + '/.meta"><img alt="XML" title="XML" border="0" src="http://dryicons.com/images/icon_sets/coquette_part_5_icons_set/png/24x24/xml_file.png"/><\/a> ' +
+                     info + oData + '/.meta?format=json"><img border="0" src="http://dryicons.com/images/icon_sets/coquette_part_5_icons_set/png/24x24/json_file.png"/><\/a> ' +
+                     info + oData + '/.meta?format=xhtml"><img border="0" src="http://dryicons.com/images/icon_sets/coquette_part_5_icons_set/png/24x24/html_file.png"/><\/a>';
              }}
     ];
     

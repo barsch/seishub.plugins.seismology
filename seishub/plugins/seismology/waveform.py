@@ -16,6 +16,71 @@ import os
 import pickle
 
 
+
+def _getPreview(session, **kwargs):
+    # build up query
+    query = session.query(WaveformChannel)
+    # start and end time
+    try:
+        start = kwargs.get('start_datetime')
+        start = UTCDateTime(start)
+    except:
+        start = UTCDateTime() - 60 * 20
+    finally:
+        query = query.filter(WaveformChannel.endtime > start.datetime)
+    try:
+        end = kwargs.get('end_datetime')
+        end = UTCDateTime(end)
+    except:
+        # 10 minutes
+        end = UTCDateTime()
+    finally:
+        query = query.filter(WaveformChannel.starttime < end.datetime)
+    # process arguments
+    if 'trace_ids' in kwargs:
+        # filter over trace id list
+        trace_ids = kwargs.get('trace_ids', '')
+        trace_filter = or_()
+        for trace_id in trace_ids.split(','):
+            temp = trace_id.split('.')
+            if len(temp) != 4:
+                continue
+            trace_filter.append(and_(
+                WaveformChannel.network == temp[0],
+                WaveformChannel.station == temp[1],
+                WaveformChannel.location == temp[2],
+                WaveformChannel.channel == temp[3]))
+        if trace_filter.clauses:
+            query = query.filter(trace_filter)
+    else:
+        # filter over network/station/location/channel id
+        for key in ['network_id', 'station_id', 'location_id',
+                    'channel_id']:
+            text = kwargs.get(key, None)
+            if text == None:
+                continue
+            col = getattr(WaveformChannel, key[:-3])
+            if text == "":
+                query = query.filter(col == None)
+            elif '*' in text or '?' in text:
+                text = text.replace('?', '_')
+                text = text.replace('*', '%')
+                query = query.filter(col.like(text))
+            else:
+                query = query.filter(col == text)
+    # execute query
+    results = query.all()
+    session.close()
+    # create Stream
+    st = Stream()
+    for result in results:
+        st.append(result.getPreview())
+    # merge and trim
+    st.merge(fill_value=0)
+    st.trim(start, end)
+    return st
+
+
 class WaveformPanel(Component):
     """
     A waveform overview for the administrative web interface.
@@ -26,7 +91,20 @@ class WaveformPanel(Component):
     panel_ids = ('seismology', 'Seismology', 'waveforms', 'Waveforms')
 
     def render(self, request):
-        data = {}
+        kwargs = {"network":"CZ",
+                  "station":"NKC",
+                  "location":"",
+                  "channel":"BHE",
+                  "start_datetime": UTCDateTime(2009, 1, 1),
+                  "end_datetime": UTCDateTime(2009, 1, 2)}
+        st = _getPreview(self.env.db.session(), **kwargs)
+
+        temp = st[0].data[0:200]
+        temp -= min(temp)
+
+        data = {
+            'data': ','.join([str(d) for d in temp])
+        }
         return data
 
 
@@ -362,63 +440,7 @@ class WaveformPreviewMapper(Component):
     mapping_url = '/seismology/waveform/getPreview'
 
     def process_GET(self, request):
-        # build up query
-        session = self.env.db.session()
-        query = session.query(WaveformChannel)
-        # start and end time
-        try:
-            start = request.args0.get('start_datetime')
-            start = UTCDateTime(start)
-        except:
-            start = UTCDateTime() - 60 * 20
-        finally:
-            query = query.filter(WaveformChannel.endtime > start.datetime)
-        try:
-            end = request.args0.get('end_datetime')
-            end = UTCDateTime(end)
-        except:
-            # 10 minutes
-            end = UTCDateTime()
-        finally:
-            query = query.filter(WaveformChannel.starttime < end.datetime)
-        # process arguments
-        for key in ['network_id', 'station_id', 'location_id', 'channel_id']:
-            text = request.args0.get(key, None)
-            if text == None:
-                continue
-            col = getattr(WaveformChannel, key[:-3])
-            if text == "":
-                query = query.filter(col == None)
-            elif '*' in text or '?' in text:
-                text = text.replace('?', '_')
-                text = text.replace('*', '%')
-                query = query.filter(col.like(text))
-            else:
-                query = query.filter(col == text)
-        # filter over id list
-        trace_ids = request.args0.get('trace_ids', '')
-        trace_filter = or_()
-        for trace_id in trace_ids.split(','):
-            temp = trace_id.split('.')
-            if len(temp) != 4:
-               continue
-            trace_filter.append(and_(
-                WaveformChannel.network == temp[0],
-                WaveformChannel.station == temp[1],
-                WaveformChannel.location == temp[2],
-                WaveformChannel.channel == temp[3]))
-        if trace_filter.clauses:
-            query = query.filter(trace_filter)
-        # execute query
-        results = query.all()
-        session.close()
-        # create Stream
-        st = Stream()
-        for result in results:
-            st.append(result.getPreview())
-        # merge and trim
-        st.merge(fill_value=0)
-        st.trim(start, end)
+        st = _getPreview(self.env.db.session(), request.args0)
         # pickle
         data = pickle.dumps(st, protocol=2)
         # generate correct header
