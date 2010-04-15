@@ -5,6 +5,7 @@
 <link rel="stylesheet" type="text/css" href="/yui2/build/calendar/assets/skins/sam/calendar.css" />
 <link rel="stylesheet" type="text/css" href="/yui2/build/menu/assets/skins/sam/menu.css" />
 <link rel="stylesheet" type="text/css" href="/yui2/build/button/assets/skins/sam/button.css" />
+<link rel="stylesheet" type="text/css" href="/yui2/build/tabview/assets/skins/sam/tabview.css" />
 #end def
 #def JAVASCRIPT
 <script type="text/javascript" src="/yui2/build/yahoo-dom-event/yahoo-dom-event.js"></script>
@@ -16,6 +17,8 @@
 <script type="text/javascript" src="/yui2/build/container/container_core-min.js"></script>
 <script type="text/javascript" src="/yui2/build/menu/menu-min.js"></script>
 <script type="text/javascript" src="/yui2/build/button/button-min.js"></script>
+<script type="text/javascript" src="/yui2/build/tabview/tabview-min.js"></script>
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 #end def
 
 
@@ -61,9 +64,9 @@
     <div class="field">
       <label>Status</label><br />
       <div id="status_button" class="yui-buttongroup"> 
-        <input id="status" type="radio" name="" value="All" checked /> 
-        <input id="status" type="radio" name="active" value="Active" /> 
-        <input id="status" type="radio" name="inactive" value="Inactive" /> 
+        <input id="" type="radio" name="status" value="All" checked="checked" /> 
+        <input id="active" type="radio" name="status" value="Active" /> 
+        <input id="inactive" type="radio" name="status" value="Inactive" /> 
       </div> 
     </div>
   </fieldset>
@@ -71,135 +74,239 @@
 
 <br />
 
-<div id="dynamicdata"></div>
+<div id="demo" class="yui-navset">
+    <ul class="yui-nav">
+        <li class="selected"><a href="#stationtable"><em>Table</em></a></li>
+        <li><a href="#stationmap"><em>Map</em></a></li>
+    </ul>            
+    <div class="yui-content">
+        <div id="stationtable"></div>
+        <div id="stationmap">
+            <div id="map_canvas" style="width: 800px; height: 500px" />
+        </div>
+    </div>
+</div>
+
+
 
 <script type="text/javascript">
 /* <![CDATA[ */
 
-YAHOO.util.Event.onContentReady("filter_fieldset", function () {
-    var b1 = new YAHOO.widget.Button("network_id_button", 
-                                     {type: "split", menu: "network_id" });
-    var b2 = new YAHOO.widget.Button("station_id_button",
-                                     {type: "split", menu: "station_id" });
+YAHOO.util.Event.onContentReady("filter_fieldset", function ()
+{
+  var button_network = new YAHOO.widget.Button("network_id_button",
+  {
+    type: "split", menu: "network_id"
+  });
+  var button_station = new YAHOO.widget.Button("station_id_button",
+  {
+    type: "split", menu: "station_id"
+  });
+  var tabs = new YAHOO.widget.TabView('demo');
 });
 
-YAHOO.example.DynamicData = function() {
+
+YAHOO.util.Event.addListener(window, "unload", google.maps.GUnload)
+
+
+YAHOO.util.Event.addListener(window, "load", function ()
+{
+  var url = "/seismology/station/getList?network_id=$network_id" +
+  "&station_id=$station_id&";
   
-    // Set initial request
-    var initialRequest = "offset=0&limit=20"
-    var info = '<a target="_blank" href="/xml/seismology/station/'
-    var url = "/seismology/station/getList?network_id=$network_id" +
-              "&station_id=$station_id&"
-    var status_list = ['', 'active', 'inactive'];
-    
-    // Column definitions
-    var myColumnDefs = [ 
-        {key:"network_id", label:"Network ID"},
-        {key:"station_id", label:"Station ID"},
-        {key:"station_name", label:"Station Name"},
-        {key:"latitude", label:"Latitude [&deg;]"},
-        {key:"longitude", label:"Longitude [&deg;]"},
-        {key:"elevation", label:"Elevation [m]"},
-        {key:"start_datetime", label:"Start Date/Time"},
-        {key:"end_datetime", label:"End Date/Time"},
-        {key:"resource_name", label:"Resource", className:'center', 
-             formatter: function (el, oRecord, oColumn, oData) {
-                 el.innerHTML = info + oData + '">[XSEED]<\/a> ' +
-                     info + oData + '?format=dataless">[Dataless]<\/a> ' +
-                     info + oData + '?format=resp">[RESP]<\/a> ' +
-                     info + oData + '?format=map">[MAP]<\/a>';
-             }},
-        {key:"resource_name", label:"Indexes", className:'center', 
-             formatter: function (el, oRecord, oColumn, oData) {
-                 el.innerHTML = info + oData + '/.index">[XML]<\/a> ' +
-                     info + oData + '/.index?format=json">[JSON]<\/a> ' +
-                     info + oData + '/.index?format=xhtml">[XHTML]<\/a>';
-             }},
-        {key:"resource_name", label:'Meta Data', className:'center', 
-             formatter: function (el, oRecord, oColumn, oData) {
-                 el.innerHTML = info + oData + '/.meta"><img alt="XML" title="XML" border="0" src="http://dryicons.com/images/icon_sets/coquette_part_5_icons_set/png/24x24/xml_file.png"/><\/a> ' +
-                     info + oData + '/.meta?format=json"><img border="0" src="http://dryicons.com/images/icon_sets/coquette_part_5_icons_set/png/24x24/json_file.png"/><\/a> ' +
-                     info + oData + '/.meta?format=xhtml"><img border="0" src="http://dryicons.com/images/icon_sets/coquette_part_5_icons_set/png/24x24/html_file.png"/><\/a>';
-             }}
-    ];
-    
-    // DataSource instance
-    var myDS = new
-    YAHOO.util.DataSource(url);
-    myDS.responseType = YAHOO.util.DataSource.TYPE_XML;
-    myDS.responseSchema = {
-        resultNode: "Item", 
-        fields: [
-            {key:"network_id"},
-            {key:"station_id"},
-            {key:"station_name"},
-            {key:"latitude"},
-            {key:"longitude"},
-            {key:"elevation"},
-            {key:"start_datetime"},
-            {key:"end_datetime"},
-            {key:"resource_name"}
-        ],
-        metaNode : "ResultSet",
-        metaFields: {
-            totalResultsAvailable: "totalResultsAvailable",
-            totalResultsReturned: "totalResultsReturned",
-            firstResultPosition: "firstResultPosition"
+  // DataSource instance
+  var myDS = new YAHOO.util.DataSource(url);
+  myDS.responseType = YAHOO.util.DataSource.TYPE_XML;
+  myDS.responseSchema =
+  {
+    resultNode: "Item",
+    fields:[
+    {
+      key: "network_id"
+    },
+    {
+      key: "station_id"
+    },
+    {
+      key: "station_name"
+    },
+    {
+      key: "latitude"
+    },
+    {
+      key: "longitude"
+    },
+    {
+      key: "elevation"
+    },
+    {
+      key: "start_datetime"
+    },
+    {
+      key: "end_datetime"
+    },
+    {
+      key: "resource_name"
+    }],
+    metaNode: "ResultSet",
+  };
+  
+  
+  var myLatlng = new google.maps.LatLng(-25.363882,131.044922);
+  var myOptions = {
+    zoom: 4,
+    center: myLatlng,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  }
+  var map = new google.maps.Map(document.getElementById("map_canvas"), 
+                                myOptions);
+  
+  var marker = new google.maps.Marker({
+      position: myLatlng, 
+      map: map,
+      title:"Hello World!"
+  });
+  
+  // A function to create the marker
+  function createMarkers() {
+        for (var i=0; i<jsonData.markers.length; i++) {
+          var point = new google.maps.GLatLng(jsonData.markers[i].lat, jsonData.markers[i].lng);
+          var marker = new google.maps.GMarker(point);
+          map.addOverlay(marker);
         }
-    };
-    
-    var myRequestBuilder = function(oState, oSelf) {
-        // Get states or use defaults
-        oState = oState || {pagination: null, sortedBy: null};
-        var offset = (oState.pagination) ? oState.pagination.recordOffset : 0;
-        var limit = (oState.pagination) ? oState.pagination.rowsPerPage : null;
-        // Build custom request
-        return "&offset=" + offset + "&limit=" + limit;
-    };
+  }
+  //createMarkers();
 
-    // DataTable configuration
-    var myConfigs = {
-        initialRequest: initialRequest,
-        dynamicData: true,
-        paginator: new YAHOO.widget.Paginator({
-            rowsPerPage: 20, 
-            template: YAHOO.widget.Paginator.TEMPLATE_ROWS_PER_PAGE, 
-            rowsPerPageOptions: [10, 20, 50, 100],
-            alwaysVisible: true
-        }),
-        generateRequest: myRequestBuilder
-    };
-    
-    // DataTable instance
-    var myDT = new YAHOO.widget.DataTable("dynamicdata", myColumnDefs, myDS, 
-                                          myConfigs);
-
-    // Enable row highlighting
-    myDT.subscribe("rowMouseoverEvent", myDT.onEventHighlightRow);
-    myDT.subscribe("rowMouseoutEvent", myDT.onEventUnhighlightRow);
-    
-    // Update totalRecords on the fly with value from server
-    myDT.handleDataReturnPayload = function(oRequest, oResponse, oPayload) {
-        oPayload.totalRecords = oResponse.meta.totalResultsAvailable;
-        return oPayload;
+  // Set initial request
+  var info = '<a target="_blank" href="/xml/seismology/station/'
+  
+  var status_list =[ '', 'active', 'inactive'];
+  
+  // Column definitions
+  var myColumnDefs =[
+  {
+    key: "network_id", label: "Network"
+  },
+  {
+    key: "station_id", label: "Station"
+  },
+  {
+    key: "station_name", label: "Name"
+  },
+  {
+    key: "latitude", label: "Latitude [&deg;]"
+  },
+  {
+    key: "longitude", label: "Longitude [&deg;]"
+  },
+  {
+    key: "elevation", label: "Elevation [m]"
+  },
+  {
+    key: "start_datetime", label: "Start Time"
+  },
+  {
+    key: "end_datetime", label: "End Time"
+  },
+  {
+    key: "resource_name", label: "Resource", className: 'center',
+    formatter: function (el, oRecord, oColumn, oData)
+    {
+      el.innerHTML = info + oData + '">[XSEED]<\/a> ' +
+      info + oData + '?format=dataless">[Dataless]<\/a> ' +
+      info + oData + '?format=resp">[RESP]<\/a> ' +
+      info + oData + '?format=map">[MAP]<\/a>';
     }
+  },
+  {
+    key: "resource_name", label: "Indexes", className: 'center',
+    formatter: function (el, oRecord, oColumn, oData)
+    {
+      el.innerHTML = info + oData + '/.index">[XML]<\/a> ' +
+      info + oData + '/.index?format=json">[JSON]<\/a> ' +
+      info + oData + '/.index?format=xhtml">[XHTML]<\/a>';
+    }
+  },
+  {
+    key: "resource_name", label: 'Meta Data', className: 'center',
+    formatter: function (el, oRecord, oColumn, oData)
+    {
+      el.innerHTML = info + oData + '/.meta">[XML]<\/a> ' +
+      info + oData + '/.meta?format=json">[JSON]<\/a> ' +
+      info + oData + '/.meta?format=xhtml">[XHTML]<\/a>';
+    }
+  }];
+  
+  
+  
+  var myRequestBuilder = function (oState, oSelf)
+  {
+    // Get states or use defaults
+    oState = oState ||
+    {
+      pagination: null, sortedBy: null
+    };
+    var offset = (oState.pagination)? oState.pagination.recordOffset: 0;
+    var limit = (oState.pagination)? oState.pagination.rowsPerPage: null;
+    // Build custom request
+    return ""
+    //return "&offset=" + offset + "&limit=" + limit;
+  };
+  
+  var initialRequest='';
+  
+  // DataTable configuration
+  var myConfigs =
+  {
+    initialRequest: initialRequest,
+    dynamicData: true,
+    paginator: new YAHOO.widget.Paginator(
+    {
+      rowsPerPage: 20,
+      template: YAHOO.widget.Paginator.TEMPLATE_ROWS_PER_PAGE,
+      rowsPerPageOptions:[10, 20, 50, 100],
+      alwaysVisible: true
+    }),
+    generateRequest: myRequestBuilder,
+  };
+  
+  // DataTable instance
+  var myDT = new YAHOO.widget.DataTable("stationtable", myColumnDefs, myDS,
+  myConfigs);
+  
+  // Enable row highlighting
+  myDT.subscribe("rowMouseoverEvent", myDT.onEventHighlightRow);
+  myDT.subscribe("rowMouseoutEvent", myDT.onEventUnhighlightRow);
+  
+  myDS.doBeforeParseData = function( oRequest , oFullResponse , oCallback ) {
+    alert(oFullResponse);
+    return oFullResponse;
+  }
+  
+  // Update totalRecords on the fly with value from server
+  myDT.handleDataReturnPayload = function (oRequest, oResponse, oPayload)
+  {
+    oPayload.totalRecords = oResponse.meta.totalResultsAvailable;
+    return oPayload;
+  }
+  
+  var handleStatus = function (e)
+  {
+    var status = status_list[e.newValue.index];
+    var oCallback =
+    {
+      success: myDT.onDataReturnInitializeTable,
+      failure: myDT.onDataReturnInitializeTable,
+      scope: myDT,
+      argument: myDT.getState()
+    }
+    var ir = myDT.get('initialRequest');
+    myDS.sendRequest(ir + '&status=' + status, oCallback);
+  };
+  
+  var myButtonGroup = new YAHOO.widget.ButtonGroup("status_button");
+  myButtonGroup.subscribe('checkedButtonChange', handleStatus);
+});
 
-    var handleStatus = function(e) {
-        var status = status_list[e.newValue.index];
-        var oCallback = {
-            success: myDT.onDataReturnInitializeTable,
-            failure: myDT.onDataReturnInitializeTable,
-            scope: myDT,
-            argument: myDT.getState()
-        }
-        var ir = myDT.get('initialRequest');
-        myDS.sendRequest(ir + '&status=' + status, oCallback);
-    }; 
-
-    var myButtonGroup = new YAHOO.widget.ButtonGroup("status_button");
-    myButtonGroup.subscribe('checkedButtonChange', handleStatus);
-
-    return {ds: myDS, dt: myDT};
-}();
 /* ]]> */
 </script>

@@ -161,6 +161,28 @@ class StationPanel(Component):
         return result
 
 
+class StationIDMapper(Component):
+    """
+    Fetches all possible station id's.
+    """
+    implements(IMapper)
+
+    mapping_url = '/seismology/station/getStationIds'
+
+    def process_GET(self, request):
+        """
+        Fetches all station id's grouped by network_id.
+        """
+        query = sql.text("""
+            SELECT network_id, station_id 
+            FROM "/seismology/station"
+            GROUP BY network_id, station_id
+            ORDER BY network_id, station_id
+        """)
+        results = self.env.db.query(query)
+        return formatResults(request, results)
+
+
 class StationListMapper(Component):
     """
     Generates a list of available seismic stations.
