@@ -440,7 +440,7 @@ class WaveformPreviewMapper(Component):
     mapping_url = '/seismology/waveform/getPreview'
 
     def process_GET(self, request):
-        st = _getPreview(self.env.db.session(), request.args0)
+        st = _getPreview(self.env.db.session(), **request.args0)
         # pickle
         data = pickle.dumps(st, protocol=2)
         # generate correct header
