@@ -31,80 +31,60 @@
 <script type="text/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/charts/charts-min.js"></script>
 
 
-<img src="http://chart.apis.google.com/chart?chs=200x125&cht=ls&chco=0077CC&chd=t:$data" />
-
-
-<form method="POST" id="filter" action="">
+<form method="post" id="filter" action="">
   <fieldset id="filter_fieldset">
     <legend>Filter</legend>
-    <div id="network_id" class="field-left">
+    <div class="field-left">
       <label>Network</label><br />
+      <input type="text" id="network_id" value="BW" />
     </div>
-    <div id="station_id" class="field-left">
+    <div class="field-left">
       <label>Station</label><br />
+      <input type="text" id="station_id" value="HROE"/>
     </div>
-    <div id="location_id" class="field-left">
+    <div class="field-left">
       <label>Location</label><br />
-    </div>
-    <div id="channel_id" class="field">
-      <label>Channel</label><br />
+      <input type="text" id="location_id" value="*" />
     </div>
     <div class="field">
-      <label>Status</label><br />
-      <div id="status_button" class="yui-buttongroup"> 
-        <input id="status" type="radio" name="" value="All" checked /> 
-        <input id="status" type="radio" name="active" value="Active" /> 
-        <input id="status" type="radio" name="inactive" value="Inactive" /> 
-      </div> 
+      <label>Channel</label><br />
+      <input type="text" id="channel_id" value="EHN" />
     </div>
+    <div class="field-left">
+      <label>Start Time</label><br />
+      <input type="text" id="start_datetime" value="2010-01-02T00:00:00" />
+    </div>
+    <div class="field">
+      <label>End Time</label><br />
+      <input type="text" id="end_datetime" value="2010-01-03T00:00:00" />
+    </div>
+    <input type="button" onclick="javascript:muh()" value="Go" />
   </fieldset>
 </form>
 
 <br />
 
+<img id="plot" src="/seismology/waveform/getPreviewImage?network_id=BW&station_id=HROE&channel_id=EHN&start_datetime=2010-01-02T00:00:00&end_datetime=2010-01-03T00:00:00" />
+
 <script type="text/javascript">
 /* <![CDATA[ */
 
-YAHOO.util.Event.onContentReady("filter_fieldset", function () {
-    var myButtonGroup = new YAHOO.widget.ButtonGroup("status_button");
-});
 
-
-YAHOO.util.Event.onContentReady("network_id", function () {
-    var args = ['foo','bar'];
-    var responseSuccess = function(o){
-        
-        var onMenuItemClick = function (p_sType, p_aArgs, p_oItem) {
-            var sText = p_oItem.cfg.getProperty("text");
-            alert("[MenuItem Properties] text: " + sText + ", value: " + p_oItem.value);
-        };
-        
-        var aSplitButton5Menu = [
-            { text: "*", value: "", onclick: { fn: onMenuItemClick } },
-            { text: "Two", value: 2, onclick: { fn: onMenuItemClick } },
-            { text: "Three", value: 3, onclick: { fn: onMenuItemClick } }
-        ];
-        
-        var network_id_button = new YAHOO.widget.Button({
-            type: "split",  
-            label: "Split Button 5", 
-            name: "splitbutton5", 
-            menu: aSplitButton5Menu, 
-            container: this });
-        
-    };
-    var responseFailure = function(o){
-        alert('muh');
-    }
-    var callback =
-    {
-        success:responseSuccess,
-        failure:responseFailure,
-        argument:args
-    };
-    var url = "/seismology/waveform/getNetworkIds?format=json";
-    YAHOO.util.Connect.asyncRequest('GET', url, callback);
-});
+function muh() {
+  nid = document.getElementById('network_id').value;
+  sid = document.getElementById('station_id').value;
+  lid = document.getElementById('location_id').value;
+  cid = document.getElementById('channel_id').value;
+  start = document.getElementById('start_datetime').value;
+  end = document.getElementById('end_datetime').value;
+  url = "/seismology/waveform/getPreviewImage?network_id=" + nid
+  url += "&amp;station_id=" + sid
+  url += "&amp;location_id=" + lid
+  url += "&amp;channel_id=" + cid
+  url += "&amp;start_datetime=" + start
+  url += "&amp;end_datetime=" + end
+  document.getElementById('plot').src = url
+};
 
 
 /* ]]> */

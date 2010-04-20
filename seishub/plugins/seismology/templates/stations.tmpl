@@ -234,7 +234,7 @@ YAHOO.util.Event.addListener(window, "load", function ()
       // Extend the LatLngBound object
       bounds.extend(point);
     }
-    var markerCluster = new MarkerClusterer(map, markers, {maxZoom: 6});
+    var markerCluster = new MarkerClusterer(map, markers, {maxZoom: 5});
     map.fitBounds(bounds);
     return oFullResponse;
   }

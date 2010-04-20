@@ -12,9 +12,9 @@ from seishub.exceptions import InternalServerError
 from seishub.packages.interfaces import IMapper, IAdminPanel
 from seishub.util.xmlwrapper import toString
 from sqlalchemy import func, or_, and_
+import numpy as np
 import os
 import pickle
-
 
 
 def _getPreview(session, **kwargs):
@@ -91,21 +91,38 @@ class WaveformPanel(Component):
     panel_ids = ('seismology', 'Seismology', 'waveforms', 'Waveforms')
 
     def render(self, request):
-        kwargs = {"network":"CZ",
-                  "station":"NKC",
-                  "location":"",
-                  "channel":"BHE",
-                  "start_datetime": UTCDateTime(2009, 1, 1),
-                  "end_datetime": UTCDateTime(2009, 1, 2)}
-        st = _getPreview(self.env.db.session(), **kwargs)
-
-        temp = st[0].data[0:200]
-        temp -= min(temp)
-
         data = {
-            'data': ','.join([str(d) for d in temp])
         }
         return data
+
+
+class WaveformPreviewImageMapper(Component):
+    """
+    Fetches all possible network id's.
+    """
+    implements(IMapper)
+
+    mapping_url = '/seismology/waveform/getPreviewImage'
+
+    def process_GET(self, request):
+        st = _getPreview(self.env.db.session(), **request.args0)
+        if len(st) != 1:
+            return ""
+        data = st[0].data
+        l = len(data) / 100
+        data = data[0:l * 100].reshape([100, l])
+        # get minimum and maximum for each row
+        diff = data.ptp(axis=1)
+        data = np.ma.filled(diff, -1)
+        data_1 = ','.join([str(d) for d in data])
+        data_2 = ','.join([str(-d) for d in data])
+
+        smax = str(int(data.max() * 1.25))
+        url = "http://chart.apis.google.com/chart?cht=bvs&chs=800x150" + \
+              "&chd=t:" + data_1 + "|" + data_2 + "&chco=4d89f9,4d89f9" + \
+              "&chbh=20&chds=-" + smax + "," + smax + "&chbh=a,1,1"
+        request.redirect(url)
+        return {}
 
 
 class WaveformNetworkIDMapper(Component):
@@ -195,7 +212,6 @@ class WaveformChannelIDMapper(Component):
         return data
 
 
-
 class WaveformLatencyMapper(Component):
     """
     Generates a list of latency values for each channel.
@@ -233,7 +249,6 @@ class WaveformLatencyMapper(Component):
         data = formatORMResults(request, query)
         session.close()
         return data
-
 
 
 class WaveformPathMapper(Component):
