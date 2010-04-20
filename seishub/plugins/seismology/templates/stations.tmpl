@@ -198,15 +198,11 @@ YAHOO.util.Event.addListener(window, "load", function ()
   var myConfigs =
   {
     initialRequest: initialRequest,
-    dynamicData: true,
     paginator: new YAHOO.widget.Paginator(
     {
       rowsPerPage: 20,
-      template: YAHOO.widget.Paginator.TEMPLATE_ROWS_PER_PAGE,
       rowsPerPageOptions:[10, 20, 50, 100],
-      alwaysVisible: true
     }),
-    generateRequest: myRequestBuilder,
   };
 
   // DataTable instance
@@ -231,25 +227,18 @@ YAHOO.util.Event.addListener(window, "load", function ()
       var marker = new google.maps.Marker({
         position: point,
         map: map,
-        title: data[i].station_id,
+        title: data[i].station_name,
         icon: 'http://chart.apis.google.com/chart?cht=it&chs=32x32&chco=30FF30,000000ff,ffffff01&chl=' + data[i].station_id + '&chx=000000,0&chf=bg,s,00000000&ext=.png'
       });
       markers.push(marker);
       // Extend the LatLngBound object
       bounds.extend(point);
     }
-    var markerCluster = new MarkerClusterer(map, markers);
+    var markerCluster = new MarkerClusterer(map, markers, {maxZoom: 6});
     map.fitBounds(bounds);
     return oFullResponse;
   }
-  
-  // Update totalRecords on the fly with value from server
-  myDT.handleDataReturnPayload = function (oRequest, oResponse, oPayload)
-  {
-    oPayload.totalRecords = oResponse.meta.totalResultsAvailable;
-    return oPayload;
-  }
-  
+
   var handleStatus = function (e)
   {
     var status = status_list[e.newValue.index];
