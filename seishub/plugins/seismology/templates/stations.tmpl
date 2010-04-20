@@ -1,24 +1,10 @@
 #def CSS
-<link rel="stylesheet" type="text/css" href="/yui2/build/fonts/fonts-min.css" />
-<link rel="stylesheet" type="text/css" href="/yui2/build/paginator/assets/skins/sam/paginator.css" />
-<link rel="stylesheet" type="text/css" href="/yui2/build/datatable/assets/skins/sam/datatable.css" />
-<link rel="stylesheet" type="text/css" href="/yui2/build/calendar/assets/skins/sam/calendar.css" />
-<link rel="stylesheet" type="text/css" href="/yui2/build/menu/assets/skins/sam/menu.css" />
-<link rel="stylesheet" type="text/css" href="/yui2/build/button/assets/skins/sam/button.css" />
-<link rel="stylesheet" type="text/css" href="/yui2/build/tabview/assets/skins/sam/tabview.css" />
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/combo?2.8.0r4/build/assets/skins/sam/skin.css" />
 #end def
 #def JAVASCRIPT
-<script type="text/javascript" src="/yui2/build/yahoo-dom-event/yahoo-dom-event.js"></script>
-<script type="text/javascript" src="/yui2/build/connection/connection-min.js"></script>
-<script type="text/javascript" src="/yui2/build/element/element-min.js"></script>
-<script type="text/javascript" src="/yui2/build/paginator/paginator-min.js"></script>
-<script type="text/javascript" src="/yui2/build/datasource/datasource-min.js"></script>
-<script type="text/javascript" src="/yui2/build/datatable/datatable-min.js"></script>
-<script type="text/javascript" src="/yui2/build/container/container_core-min.js"></script>
-<script type="text/javascript" src="/yui2/build/menu/menu-min.js"></script>
-<script type="text/javascript" src="/yui2/build/button/button-min.js"></script>
-<script type="text/javascript" src="/yui2/build/tabview/tabview-min.js"></script>
+<script type="text/javascript" src="http://yui.yahooapis.com/combo?2.8.0r4/build/yuiloader-dom-event/yuiloader-dom-event.js&amp;2.8.0r4/build/event-delegate/event-delegate-min.js&amp;2.8.0r4/build/element/element-min.js&amp;2.8.0r4/build/container/container-min.js&amp;2.8.0r4/build/menu/menu-min.js&amp;2.8.0r4/build/button/button-min.js&amp;2.8.0r4/build/connection/connection_core-min.js&amp;2.8.0r4/build/datasource/datasource-min.js&amp;2.8.0r4/build/paginator/paginator-min.js&amp;2.8.0r4/build/datatable/datatable-min.js&amp;2.8.0r4/build/tabview/tabview-min.js"></script>
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/src/markerclusterer_packed.js"></script>
 #end def
 
 
@@ -223,10 +209,6 @@ YAHOO.util.Event.addListener(window, "load", function ()
     generateRequest: myRequestBuilder,
   };
 
-
-
-
-
   // DataTable instance
   var myDT = new YAHOO.widget.DataTable("stationtable", myColumnDefs, myDS,
   myConfigs);
@@ -238,7 +220,7 @@ YAHOO.util.Event.addListener(window, "load", function ()
   myDS.doBeforeParseData = function( oRequest , oFullResponse , oCallback ) {
     
     var data = oFullResponse.ResultSet.Result;
-    
+    var markers = []
     // Create a LatLngBounds object
     var bounds = new google.maps.LatLngBounds();
     // Loop over data
@@ -246,16 +228,17 @@ YAHOO.util.Event.addListener(window, "load", function ()
     {
       var point = new google.maps.LatLng(data[i].latitude, data[i].longitude);
       // Add marker
-      new google.maps.Marker({
+      var marker = new google.maps.Marker({
         position: point,
         map: map,
         title: data[i].station_id,
-        icon: 'http://chart.apis.google.com/chart?cht=it&chs=32x32&chco=FF0000,000000ff,ffffff01&chl=' + data[i].station_id + '&chx=000000,0&chf=bg,s,00000000&ext=.png'
-        //icon: 'http://google-maps-icons.googlecode.com/files/wifi.png'
-      });  
+        icon: 'http://chart.apis.google.com/chart?cht=it&chs=32x32&chco=30FF30,000000ff,ffffff01&chl=' + data[i].station_id + '&chx=000000,0&chf=bg,s,00000000&ext=.png'
+      });
+      markers.push(marker);
       // Extend the LatLngBound object
       bounds.extend(point);
     }
+    var markerCluster = new MarkerClusterer(map, markers);
     map.fitBounds(bounds);
     return oFullResponse;
   }
