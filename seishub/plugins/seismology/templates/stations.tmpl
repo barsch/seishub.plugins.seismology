@@ -24,15 +24,14 @@
 
 <h1>Stations</h1>
 
-<form method="POST" id="filter" action="">
+<form method="post" id="filter" action="">
   <fieldset id="filter_fieldset">
     <legend>Filter</legend>
     <div class="field-left">
       <label>Network</label><br />
       <input type="submit" id="network_id_button" name="network_id_button"
-             value="
-             #echo $network_id or '&nbsp; * &nbsp;'
-             " />
+             #echo 'value="' + ($network_id or '&nbsp; * &nbsp;') + '"'
+        />
       <select id="network_id" name="network_id">
         <option value="*"> * </option>
         #for $id in $network_ids
@@ -47,9 +46,8 @@
     <div class="field">
       <label>Station</label><br />
       <input type="submit" id="station_id_button" name="station_id_button"
-        value="
-        #echo $station_id or '&nbsp; * &nbsp;'
-        " />
+             #echo 'value="' + ($station_id or '&nbsp; * &nbsp;') + '"'
+        />
       <select id="station_id" name="station_id">
         <option value=""> * </option>
         #for $id in $station_ids
@@ -64,9 +62,11 @@
     <div class="field">
       <label>Status</label><br />
       <div id="status_button" class="yui-buttongroup"> 
-        <input id="" type="radio" name="status" value="All" checked="checked" /> 
-        <input id="active" type="radio" name="status" value="Active" /> 
-        <input id="inactive" type="radio" name="status" value="Inactive" /> 
+        <input id="status_all" type="radio" name="status" value="All" 
+          checked="checked" /> 
+        <input id="status_active" type="radio" name="status" value="Active" /> 
+        <input id="status_inactive" type="radio" name="status" 
+          value="Inactive" /> 
       </div> 
     </div>
   </fieldset>
@@ -81,8 +81,8 @@
     </ul>            
     <div class="yui-content">
         <div id="stationtable"></div>
-        <div id="stationmap">
-            <div id="map_canvas" style="width: 800px; height: 500px" />
+        <div id="stationmap" style="width: 100%; height: 100%;">
+            <div id="map_canvas" style="width: 100%; height: 700px;" />
         </div>
     </div>
 </div>
@@ -111,71 +111,24 @@ YAHOO.util.Event.addListener(window, "unload", google.maps.GUnload)
 
 YAHOO.util.Event.addListener(window, "load", function ()
 {
-  var url = "/seismology/station/getList?network_id=$network_id" +
-  "&station_id=$station_id&";
-  
+  var url = "/seismology/station/getList?format=json&network_id=$network_id" +
+            "&station_id=$station_id&";
+
   // DataSource instance
   var myDS = new YAHOO.util.DataSource(url);
-  myDS.responseType = YAHOO.util.DataSource.TYPE_XML;
-  myDS.responseSchema =
-  {
-    resultNode: "Item",
-    fields:[
-    {
-      key: "network_id"
-    },
-    {
-      key: "station_id"
-    },
-    {
-      key: "station_name"
-    },
-    {
-      key: "latitude"
-    },
-    {
-      key: "longitude"
-    },
-    {
-      key: "elevation"
-    },
-    {
-      key: "start_datetime"
-    },
-    {
-      key: "end_datetime"
-    },
-    {
-      key: "resource_name"
-    }],
-    metaNode: "ResultSet",
+  myDS.responseType = YAHOO.util.DataSource.TYPE_JSON;
+  myDS.connXhrMode = "queueRequests";
+  myDS.responseSchema = {
+    resultsList: "ResultSet.Result",
+    fields:["network_id", "station_id", "station_name", "latitude",
+            "longitude", "elevation", "start_datetime", "end_datetime",
+            "resource_name"],
   };
-  
-  
-  var myLatlng = new google.maps.LatLng(-25.363882,131.044922);
-  var myOptions = {
-    zoom: 4,
-    center: myLatlng,
+
+  // Google Map
+  var map = new google.maps.Map(document.getElementById("map_canvas"), {
     mapTypeId: google.maps.MapTypeId.ROADMAP
-  }
-  var map = new google.maps.Map(document.getElementById("map_canvas"), 
-                                myOptions);
-  
-  var marker = new google.maps.Marker({
-      position: myLatlng, 
-      map: map,
-      title:"Hello World!"
   });
-  
-  // A function to create the marker
-  function createMarkers() {
-        for (var i=0; i<jsonData.markers.length; i++) {
-          var point = new google.maps.GLatLng(jsonData.markers[i].lat, jsonData.markers[i].lng);
-          var marker = new google.maps.GMarker(point);
-          map.addOverlay(marker);
-        }
-  }
-  //createMarkers();
 
   // Set initial request
   var info = '<a target="_blank" href="/xml/seismology/station/'
@@ -269,17 +222,41 @@ YAHOO.util.Event.addListener(window, "load", function ()
     }),
     generateRequest: myRequestBuilder,
   };
-  
+
+
+
+
+
   // DataTable instance
   var myDT = new YAHOO.widget.DataTable("stationtable", myColumnDefs, myDS,
   myConfigs);
-  
+
   // Enable row highlighting
   myDT.subscribe("rowMouseoverEvent", myDT.onEventHighlightRow);
   myDT.subscribe("rowMouseoutEvent", myDT.onEventUnhighlightRow);
-  
+
   myDS.doBeforeParseData = function( oRequest , oFullResponse , oCallback ) {
-    alert(oFullResponse);
+    
+    var data = oFullResponse.ResultSet.Result;
+    
+    // Create a LatLngBounds object
+    var bounds = new google.maps.LatLngBounds();
+    // Loop over data
+    for (var i = 0; i < data.length; i++)
+    {
+      var point = new google.maps.LatLng(data[i].latitude, data[i].longitude);
+      // Add marker
+      new google.maps.Marker({
+        position: point,
+        map: map,
+        title: data[i].station_id,
+        icon: 'http://chart.apis.google.com/chart?cht=it&chs=32x32&chco=FF0000,000000ff,ffffff01&chl=' + data[i].station_id + '&chx=000000,0&chf=bg,s,00000000&ext=.png'
+        //icon: 'http://google-maps-icons.googlecode.com/files/wifi.png'
+      });  
+      // Extend the LatLngBound object
+      bounds.extend(point);
+    }
+    map.fitBounds(bounds);
     return oFullResponse;
   }
   

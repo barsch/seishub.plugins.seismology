@@ -121,9 +121,7 @@
             </tr>
           </xsl:if>
         </table>
-        <br />
-        <br />
-        <div id="map_canvas" style="width: 700px; height: 500px" />
+        <div id="map_canvas" style="margin-top: 20px; width: 700px; height: 500px" />
       </body>
     </html>
   </xsl:template>
