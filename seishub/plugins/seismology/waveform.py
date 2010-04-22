@@ -5,6 +5,7 @@ Seismology package for SeisHub.
 
 from lxml.etree import Element, SubElement as Sub
 from obspy.core import UTCDateTime, Stream, read
+from obspy.core.preview import mergePreviews
 from obspy.db.db import WaveformChannel, WaveformFile, WaveformPath
 from seishub.core import Component, implements
 from seishub.db.util import formatORMResults
@@ -72,11 +73,12 @@ def _getPreview(session, **kwargs):
     results = query.all()
     session.close()
     # create Stream
+    import pdb;pdb.set_trace()
     st = Stream()
     for result in results:
         st.append(result.getPreview())
     # merge and trim
-    st.merge(fill_value=0)
+    st = mergePreviews(st)
     st.trim(start, end)
     return st
 

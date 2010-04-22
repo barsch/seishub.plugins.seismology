@@ -69,6 +69,37 @@
 <script type="text/javascript">
 /* <![CDATA[ */
 
+var callbacks = {
+    // Successful XHR response handler
+    success : function (o) {
+        var messages = [];
+
+        // Use the JSON Utility to parse the data returned from the server
+        try {
+            messages = YAHOO.lang.JSON.parse(o.responseText);
+        }
+        catch (x) {
+            alert("JSON Parse failed!");
+            return;
+        }
+
+        // The returned data was parsed into an array of objects.
+        // Add a P element for each received message
+        for (var i = 0, len = messages.length; i < len; ++i) {
+            var m = messages[i];
+            var p = document.createElement('p');
+            var message_text = document.createTextNode(
+                    m.animal + ' says "' + m.message + '"');
+            p.appendChild(message_text);
+            msg_section.appendChild(p);
+        }
+    },
+};
+
+// Make the call to the server for JSON data
+//YAHOO.util.Connect.asyncRequest('GET',"assets/jsonConnect.php", callbacks);
+
+
 
 function muh() {
   nid = document.getElementById('network_id').value;
