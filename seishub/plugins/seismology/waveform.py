@@ -73,14 +73,14 @@ def _getPreview(session, **kwargs):
     results = query.all()
     session.close()
     # create Stream
-    import pdb;pdb.set_trace()
     st = Stream()
     for result in results:
-        st.append(result.getPreview())
+        preview = result.getPreview()
+        st.append(preview)
     # merge and trim
     st = mergePreviews(st)
     st.trim(start, end)
-    return st
+    return st, start, end
 
 
 class WaveformPanel(Component):
@@ -107,24 +107,23 @@ class WaveformPreviewImageMapper(Component):
     mapping_url = '/seismology/waveform/getPreviewImage'
 
     def process_GET(self, request):
-        st = _getPreview(self.env.db.session(), **request.args0)
-        if len(st) != 1:
-            return ""
-        data = st[0].data
-        l = len(data) / 100
-        data = data[0:l * 100].reshape([100, l])
-        # get minimum and maximum for each row
-        diff = data.ptp(axis=1)
-        data = np.ma.filled(diff, -1)
-        data_1 = ','.join([str(d) for d in data])
-        data_2 = ','.join([str(-d) for d in data])
-
-        smax = str(int(data.max() * 1.25))
-        url = "http://chart.apis.google.com/chart?cht=bvs&chs=800x150" + \
-              "&chd=t:" + data_1 + "|" + data_2 + "&chco=4d89f9,4d89f9" + \
-              "&chbh=20&chds=-" + smax + "," + smax + "&chbh=a,1,1"
-        request.redirect(url)
-        return {}
+        st, start, end = _getPreview(self.env.db.session(), **request.args0)
+        st.trim(start, end, pad=True)
+        # create a full stream object
+        print st
+        for tr in st:
+            tr.data[tr.data == -1] = np.ma.masked
+            muh = np.empty(len(tr.data) * 2, tr.data.dtype)
+            muh[0::2] = tr.data
+            muh[1::2] = -tr.data
+            tr.data = muh
+            tr.stats.delta = tr.stats.delta / 2
+        # XXX
+        st.sort()
+        data = st.plot(format="png")
+        # set content type
+        request.setHeader('content-type', 'image/png')
+        return data
 
 
 class WaveformNetworkIDMapper(Component):
@@ -457,7 +456,7 @@ class WaveformPreviewMapper(Component):
     mapping_url = '/seismology/waveform/getPreview'
 
     def process_GET(self, request):
-        st = _getPreview(self.env.db.session(), **request.args0)
+        st, _, _ = _getPreview(self.env.db.session(), **request.args0)
         # pickle
         data = pickle.dumps(st, protocol=2)
         # generate correct header
