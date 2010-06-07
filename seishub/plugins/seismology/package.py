@@ -140,6 +140,8 @@ class SeismicEventResourceType(Component):
     registerIndex('event_type', '/event/type', 'text')
     registerIndex('localisation_method', '/event/event_type/value', 'text')
     registerIndex('user', '/event/event_type/user', 'text')
+    registerIndex('account', '/event/event_type/account', 'text')
+    registerIndex('public', '/event/event_type/public', 'boolean')
 
     registerAlias('/seismology/event/last20BigEvents',
                   "/seismology/event[magnitude>=2.0] " + \

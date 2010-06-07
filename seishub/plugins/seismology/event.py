@@ -47,9 +47,10 @@ class EventListMapper(Component):
         query = sql.select([tab])
         # process arguments
         # this is a string value, it returns None if nothing is given
-        temp = request.args0.get('localisation_method')
-        if temp:
-            query = query.where(tab.c['localisation_method'] == temp)
+        for key in ['localisation_method', 'account', 'user']:
+            temp = request.args0.get(key)
+            if temp:
+                query = query.where(tab.c[key] == temp)
         # min-max datetime values
         for key in ['datetime', 'first_pick', 'last_pick']:
             try:
