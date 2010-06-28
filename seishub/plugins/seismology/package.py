@@ -104,6 +104,12 @@ class SeismicEventResourceType(Component):
     registerIndex('depth',
                   '/event/origin/depth/value',
                   'numeric')
+    registerIndex('used_p',
+                  '/event/origin/originQuality/P_usedPhaseCount',
+                  'integer')
+    registerIndex('used_s',
+                  '/event/origin/originQuality/S_usedPhaseCount',
+                  'integer')
     registerIndex('magnitude',
                   '/event/magnitude/mag/value',
                   'numeric')

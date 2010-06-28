@@ -85,6 +85,23 @@ class EventListMapper(Component):
                 query = query.where(tab.c[key] <= temp)
             except:
                 pass
+        # min-max integer values
+        for key in ['used_p', 'used_s']:
+            try:
+                temp = int(request.args0.get(key))
+                query = query.where(tab.c[key] == temp)
+            except:
+                pass
+            try:
+                temp = int(request.args0.get('min_' + key))
+                query = query.where(tab.c[key] >= temp)
+            except:
+                pass
+            try:
+                temp = int(request.args0.get('max_' + key))
+                query = query.where(tab.c[key] <= temp)
+            except:
+                pass
         # execute query
         results = request.env.db.query(query.offset(offset).limit(limit))
         # ok count all distinct values
