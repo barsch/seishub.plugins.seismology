@@ -6,6 +6,7 @@ Seismology package for SeisHub.
 from lxml.etree import Element, SubElement as Sub
 from obspy.core import UTCDateTime, Stream, read
 from obspy.core.preview import mergePreviews
+from obspy.gse2.libgse2 import ChksumError
 from obspy.db.db import WaveformChannel, WaveformFile, WaveformPath
 from seishub.core import Component, implements
 from seishub.db.util import formatORMResults
