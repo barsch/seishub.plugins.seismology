@@ -388,7 +388,6 @@ class WaveformCutterMapper(Component):
                     st = read(fname, format=result[6], starttime=start,
                               endtime=end)
                 except ChksumError:
-                    warnings.warn("Bad GSE2 checksum.")
                     try:
                         st = read(fname, format=result[6], starttime=start,
                                   endtime=end, verify_chksum=False)
