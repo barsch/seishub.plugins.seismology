@@ -3,12 +3,12 @@
 Seismology package for SeisHub.
 """
 
-from seishub.core import Component, implements
-from seishub.packages.installer import registerIndex, registerSchema, \
+from seishub.core.core import Component, implements
+from seishub.core.packages.installer import registerIndex, registerSchema, \
     registerStylesheet, registerAlias
-from seishub.packages.interfaces import IProcessorIndex, IPackage, \
+from seishub.core.packages.interfaces import IProcessorIndex, IPackage, \
     IResourceType
-from seishub.xmldb import index
+from seishub.core.xmldb import index
 import os
 from obspy.core import UTCDateTime
 

@@ -6,9 +6,10 @@ Seismology package for SeisHub.
 from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.xseed import Parser
-from seishub.core import Component, implements
-from seishub.db.util import formatResults
-from seishub.packages.interfaces import IMapper, IResourceFormater, IAdminPanel
+from seishub.core.core import Component, implements
+from seishub.core.db.util import formatResults
+from seishub.core.packages.interfaces import IMapper, IResourceFormater, \
+    IAdminPanel
 from sqlalchemy import sql, Table
 import os
 import zipfile

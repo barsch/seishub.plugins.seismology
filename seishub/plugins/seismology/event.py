@@ -4,9 +4,9 @@ Seismology package for SeisHub.
 """
 
 from obspy.core import UTCDateTime
-from seishub.core import Component, implements
-from seishub.db.util import formatResults
-from seishub.packages.interfaces import IMapper, IAdminPanel
+from seishub.core.core import Component, implements
+from seishub.core.db.util import formatResults
+from seishub.core.packages.interfaces import IMapper, IAdminPanel
 from sqlalchemy import Table, sql
 import os
 

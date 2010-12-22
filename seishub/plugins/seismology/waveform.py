@@ -8,11 +8,11 @@ from obspy.core import UTCDateTime, Stream, read
 from obspy.core.preview import mergePreviews
 from obspy.gse2.libgse2 import ChksumError
 from obspy.db.db import WaveformChannel, WaveformFile, WaveformPath
-from seishub.core import Component, implements
-from seishub.db.util import formatORMResults
-from seishub.exceptions import InternalServerError
-from seishub.packages.interfaces import IMapper, IAdminPanel
-from seishub.util.xmlwrapper import toString
+from seishub.core.core import Component, implements
+from seishub.core.db.util import formatORMResults
+from seishub.core.exceptions import InternalServerError
+from seishub.core.packages.interfaces import IMapper, IAdminPanel
+from seishub.core.util.xmlwrapper import toString
 from sqlalchemy import func, or_, and_
 import numpy as np
 import os
@@ -433,7 +433,7 @@ class WaveformCutterMapper(Component):
         # cut
         st.trim(start, end)
         # write to arclink directory
-        rpath = os.path.join(self.env.getSeisHubPath(), 'data', 'arclink')
+        rpath = os.path.join(self.env.getInstancePath(), 'data', 'arclink')
         for tr in st:
             # network directory
             path = os.path.join(rpath, tr.stats.network)

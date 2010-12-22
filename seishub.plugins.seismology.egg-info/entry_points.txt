@@ -1,3 +1,0 @@
-[seishub.plugins]
-seishub.plugins.seismology = seishub.plugins.seismology
-
