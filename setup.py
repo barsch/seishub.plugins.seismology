@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-SeisHub installer
+seishub.plugins.seismology installer
 
 :copyright:
     Robert Barsch (barsch@lmu.de)
