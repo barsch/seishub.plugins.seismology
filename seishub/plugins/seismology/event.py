@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Seismology package for SeisHub.
+Event panels and mappers.
 """
 
 from obspy.core import UTCDateTime

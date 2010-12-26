@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Seismology package for SeisHub.
+Waveform panels and mappers.
 """
 
 from lxml.etree import Element, SubElement as Sub

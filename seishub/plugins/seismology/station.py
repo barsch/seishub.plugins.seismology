@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Seismology package for SeisHub.
+Station panels and mappers.
 """
 
 from StringIO import StringIO
