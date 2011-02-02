@@ -46,7 +46,7 @@ setup(
     ],
     keywords=['SeisHub', 'seismology'],
     packages=['seishub.plugins.seismology'],
-    namespace_packages=['seishub.plugins'],
+    namespace_packages=['seishub', 'seishub.plugins'],
     include_package_data=True,
     zip_safe=False,
     install_requires=[
