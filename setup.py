@@ -10,7 +10,7 @@ seishub.plugins.seismology installer
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from setuptools import setup
+from setuptools import find_packages, setup
 import os
 
 
@@ -45,7 +45,7 @@ setup(
         'Topic :: Scientific/Engineering :: Physics',
     ],
     keywords=['SeisHub', 'seismology'],
-    packages=['seishub.plugins.seismology'],
+    packages=find_packages(),
     namespace_packages=['seishub', 'seishub.plugins'],
     include_package_data=True,
     zip_safe=False,
