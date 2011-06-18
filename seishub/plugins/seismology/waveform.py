@@ -117,7 +117,6 @@ class WaveformPreviewImageMapper(Component):
         st, start, end = _getPreview(self.env.db.session(), **request.args0)
         st.trim(start, end, pad=True)
         # create a full stream object
-        print st
         for tr in st:
             tr.data[tr.data == -1] = np.ma.masked
             muh = np.empty(len(tr.data) * 2, tr.data.dtype)
@@ -127,7 +126,10 @@ class WaveformPreviewImageMapper(Component):
             tr.stats.delta = tr.stats.delta / 2
         # XXX
         st.sort()
-        data = st.plot(format="png")
+        try:
+            data = st.plot(format="png")
+        except:
+            return ''
         # set content type
         request.setHeader('content-type', 'image/png')
         return data
