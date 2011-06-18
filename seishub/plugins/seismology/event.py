@@ -41,7 +41,8 @@ class EventListMapper(Component):
         try:
             limit = int(request.args0.get('limit'))
         except:
-            limit = None
+            limit = 50
+        # restrict maximal number of events to 2500
         offset = int(request.args0.get('offset', 0))
         # build up query
         query = sql.select([tab])
