@@ -93,7 +93,7 @@ class WaveformPanel(Component):
     template = 'templates' + os.sep + 'waveforms.tmpl'
     panel_ids = ('seismology', 'Seismology', 'waveforms', 'Waveforms')
 
-    def render(self, request):
+    def render(self, request): #@UnusedVariable
         data = {
         }
         return data

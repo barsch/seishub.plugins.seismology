@@ -20,7 +20,7 @@ class EventPanel(Component):
     template = 'templates' + os.sep + 'events.tmpl'
     panel_ids = ('seismology', 'Seismology', 'events', 'Events')
 
-    def render(self, request):
+    def render(self, request): #@UnusedVariable
         data = {}
         return data
 
