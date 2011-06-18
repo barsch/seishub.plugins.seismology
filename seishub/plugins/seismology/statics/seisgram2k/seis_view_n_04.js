@@ -167,7 +167,7 @@ function seis_view_n(windowName, titleString, liveseis, seischannel, locale, mod
 		// applet tag
 // !!CHANGE HERE
 		viewer_doc.writeln(
-		"<APPLET archive=./java/SeisGram2K53.jar code=net.alomax.seisgram2k.SeisGram2KApp.class width=100% height=100%>");
+		"<APPLET archive=/manage/seisgram2k/SeisGram2K60.jar code=net.alomax.seisgram2k.SeisGram2KApp.class width=100% height=80%>");
 // !!END CHANGE HERE
 
 	// applet parameters

@@ -6,12 +6,13 @@ Waveform panels and mappers.
 from lxml.etree import Element, SubElement as Sub
 from obspy.core import UTCDateTime, Stream, read
 from obspy.core.preview import mergePreviews
-from obspy.gse2.libgse2 import ChksumError
 from obspy.db.db import WaveformChannel, WaveformFile, WaveformPath
+from obspy.gse2.libgse2 import ChksumError
 from seishub.core.core import Component, implements
 from seishub.core.db.util import formatORMResults
 from seishub.core.exceptions import InternalServerError
-from seishub.core.packages.interfaces import IMapper, IAdminPanel
+from seishub.core.packages.interfaces import IMapper, IAdminPanel, \
+    IAdminStaticContent
 from seishub.core.util.xmlwrapper import toString
 from sqlalchemy import func, or_, and_
 import numpy as np
@@ -88,7 +89,7 @@ class WaveformPanel(Component):
     """
     A waveform overview for the administrative web interface.
     """
-    implements(IAdminPanel)
+    implements(IAdminPanel, IAdminStaticContent)
 
     template = 'templates' + os.sep + 'waveforms.tmpl'
     panel_ids = ('seismology', 'Seismology', 'waveforms', 'Waveforms')
@@ -97,6 +98,11 @@ class WaveformPanel(Component):
         data = {
         }
         return data
+
+    def getStaticContent(self):
+        path = os.path.join(os.path.dirname(__file__), 'statics',
+                            'seisgram2k')
+        return {'/seisgram2k': path}
 
 
 class WaveformPreviewImageMapper(Component):

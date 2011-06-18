@@ -9,7 +9,7 @@ from obspy.xseed import Parser
 from seishub.core.core import Component, implements
 from seishub.core.db.util import formatResults
 from seishub.core.packages.interfaces import IMapper, IResourceFormater, \
-    IAdminPanel
+    IAdminPanel, IAdminStaticContent
 from sqlalchemy import sql, Table
 import os
 import zipfile
@@ -98,7 +98,7 @@ class StationPanel(Component):
     """
     A seismic station overview for the administrative web interface.
     """
-    implements(IAdminPanel)
+    implements(IAdminPanel, IAdminStaticContent)
 
     template = 'templates' + os.sep + 'stations.tmpl'
     panel_ids = ('seismology', 'Seismology', 'stations', 'Stations')
@@ -120,6 +120,11 @@ class StationPanel(Component):
         data['network_ids'] = self._getNetworkIDs()
         data['station_ids'] = self._getStationIDs(nid)
         return data
+
+    def getStaticContent(self):
+        path = os.path.join(os.path.dirname(__file__), 'statics',
+                            'markercluster')
+        return {'/markercluster': path}
 
     def _getNetworkIDs(self):
         """

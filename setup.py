@@ -61,9 +61,6 @@ setup(
         'obspy.arclink',
         'obspy.db',
     ],
-    dependency_links=[
-        "https://svn.obspy.org/trunk/obspy.db#egg=obspy.db-dev"
-    ],
     download_url="https://svn.geophysik.uni-muenchen.de/svn/seishub/trunk/seishub.plugins.seismology#egg=seishub.plugins.seismology-dev",
     entry_points={'seishub.plugins': [
         'seishub.plugins.seismology = seishub.plugins.seismology', ]
