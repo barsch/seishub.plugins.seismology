@@ -3,6 +3,8 @@
 Seismology package for SeisHub.
 """
 
+from obspy.core import UTCDateTime
+from obspy.db.db import Base
 from seishub.core.core import Component, implements
 from seishub.core.packages.installer import registerIndex, registerSchema, \
     registerStylesheet, registerAlias
@@ -10,7 +12,6 @@ from seishub.core.packages.interfaces import IProcessorIndex, IPackage, \
     IResourceType
 from seishub.core.xmldb import index
 import os
-from obspy.core import UTCDateTime
 
 
 class SeismologyPackage(Component):
@@ -21,6 +22,11 @@ class SeismologyPackage(Component):
 
     package_id = 'seismology'
     version = '0.1'
+
+    def __init__(self, *args, **kwargs):
+        super(SeismologyPackage, self).__init__(*args, **kwargs)
+        # initialize obspy.db tables
+        Base.metadata.create_all(self.env.db.engine, checkfirst=True)
 
 
 class SeismicStationResourceType(Component):
