@@ -15,8 +15,30 @@
 <script type="text/javascript" src="/yui2/build/container/container_core-min.js"></script>
 <script type="text/javascript" src="/yui2/build/menu/menu-min.js"></script>
 <script type="text/javascript" src="/yui2/build/button/button-min.js"></script>
-<script type="text/javascript" src="/yui2/build/json/json-min.js"></script>
+<script type="text/javascript">
+/* <![CDATA[ */
+
+function plotPreview() {
+  nid = document.getElementById('network_id').value;
+  sid = document.getElementById('station_id').value;
+  lid = document.getElementById('location_id').value;
+  cid = document.getElementById('channel_id').value;
+  start = document.getElementById('start_datetime').value;
+  end = document.getElementById('end_datetime').value;
+  url = "/seismology/waveform/getPreview?format=image&network_id=" + nid
+  url += "&amp;station_id=" + sid
+  url += "&amp;location_id=" + lid
+  url += "&amp;channel_id=" + cid
+  url += "&amp;start_datetime=" + start
+  url += "&amp;end_datetime=" + end
+  document.getElementById('plot').src = url
+};
+
+
+/* ]]> */
+</script>
 #end def
+
 
 <h1>Waveforms</h1>
 
@@ -38,7 +60,7 @@
     </div>
     <div class="field">
       <label>Channel</label><br />
-      <input type="text" id="channel_id" value="EHN" />
+      <input type="text" id="channel_id" value="EH*" />
     </div>
     <div class="field-left">
       <label>Start Time</label><br />
@@ -48,65 +70,10 @@
       <label>End Time</label><br />
       <input type="text" id="end_datetime" value="2010-01-03T00:00:00" />
     </div>
-    <input type="button" onclick="javascript:plot()" value="Go" />
+    <input type="button" onclick="javascript:plotPreview()" value="Go" />
   </fieldset>
 </form>
 
 <br />
 
-<img id="plot" src="/seismology/waveform/getPreview?network_id=BW&station_id=HROE&channel_id=EHN&start_datetime=2010-01-02T00:00:00&end_datetime=2010-01-03T00:00:00&format=image" />
-
-<script type="text/javascript">
-/* <![CDATA[ */
-
-var callbacks = {
-    // Successful XHR response handler
-    success : function (o) {
-        var messages = [];
-
-        // Use the JSON Utility to parse the data returned from the server
-        try {
-            messages = YAHOO.lang.JSON.parse(o.responseText);
-        }
-        catch (x) {
-            alert("JSON Parse failed!");
-            return;
-        }
-
-        // The returned data was parsed into an array of objects.
-        // Add a P element for each received message
-        for (var i = 0, len = messages.length; i < len; ++i) {
-            var m = messages[i];
-            var p = document.createElement('p');
-            var message_text = document.createTextNode(
-                    m.animal + ' says "' + m.message + '"');
-            p.appendChild(message_text);
-            msg_section.appendChild(p);
-        }
-    },
-};
-
-// Make the call to the server for JSON data
-//YAHOO.util.Connect.asyncRequest('GET',"assets/jsonConnect.php", callbacks);
-
-
-
-function plot() {
-  nid = document.getElementById('network_id').value;
-  sid = document.getElementById('station_id').value;
-  lid = document.getElementById('location_id').value;
-  cid = document.getElementById('channel_id').value;
-  start = document.getElementById('start_datetime').value;
-  end = document.getElementById('end_datetime').value;
-  url = "/seismology/waveform/getPreview?format=image&network_id=" + nid
-  url += "&amp;station_id=" + sid
-  url += "&amp;location_id=" + lid
-  url += "&amp;channel_id=" + cid
-  url += "&amp;start_datetime=" + start
-  url += "&amp;end_datetime=" + end
-  document.getElementById('plot').src = url
-};
-
-
-/* ]]> */
-</script>
+<img id="plot" src="/seismology/waveform/getPreview?network_id=BW&station_id=HROE&channel_id=EH*&start_datetime=2010-01-02T00:00:00&end_datetime=2010-01-03T00:00:00&format=image" />
