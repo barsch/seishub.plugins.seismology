@@ -9,7 +9,7 @@ from obspy.core.preview import mergePreviews
 from obspy.db.db import WaveformChannel, WaveformFile, WaveformPath
 from obspy.gse2.libgse2 import ChksumError
 from seishub.core.core import Component, implements
-from seishub.core.db.util import formatORMResults
+from seishub.core.db.util import formatORMResults, CustomJSONEncoder
 from seishub.core.exceptions import InternalServerError
 from seishub.core.packages.interfaces import IMapper, IAdminPanel, \
     IAdminStaticContent
@@ -18,6 +18,7 @@ from sqlalchemy import func, or_, and_
 import numpy as np
 import os
 import pickle
+import json
 
 
 def _getPreview(session, **kwargs):
@@ -103,36 +104,6 @@ class WaveformPanel(Component):
         path = os.path.join(os.path.dirname(__file__), 'statics',
                             'seisgram2k')
         return {'/seisgram2k': path}
-
-
-class WaveformPreviewImageMapper(Component):
-    """
-    Fetches all possible network id's.
-    """
-    implements(IMapper)
-
-    mapping_url = '/seismology/waveform/getPreviewImage'
-
-    def process_GET(self, request):
-        st, start, end = _getPreview(self.env.db.session(), **request.args0)
-        st.trim(start, end, pad=True)
-        # create a full stream object
-        for tr in st:
-            tr.data[tr.data == -1] = np.ma.masked
-            muh = np.empty(len(tr.data) * 2, tr.data.dtype)
-            muh[0::2] = tr.data
-            muh[1::2] = -tr.data
-            tr.data = muh
-            tr.stats.delta = tr.stats.delta / 2
-        # XXX
-        st.sort()
-        try:
-            data = st.plot(format="png")
-        except:
-            return ''
-        # set content type
-        request.setHeader('content-type', 'image/png')
-        return data
 
 
 class WaveformNetworkIDMapper(Component):
@@ -471,9 +442,54 @@ class WaveformPreviewMapper(Component):
     mapping_url = '/seismology/waveform/getPreview'
 
     def process_GET(self, request):
+        # get format
+        formats = request.args.get('format', []) or \
+            request.args.get('output', [])
+        if 'json' in formats:
+            return self._createJSON(request)
+        elif 'png' in formats or 'image' in formats:
+            return self._createImage(request)
+        else:
+            return self._createPickle(request)
+
+    def _createPickle(self, request):
         st, _, _ = _getPreview(self.env.db.session(), **request.args0)
         # pickle
         data = pickle.dumps(st, protocol=2)
         # generate correct header
         request.setHeader('content-type', 'binary/octet-stream')
         return data
+
+    def _createImage(self, request):
+        st, start, end = _getPreview(self.env.db.session(), **request.args0)
+        st.trim(start, end, pad=True)
+        # create a full stream object
+        for tr in st:
+            tr.data[tr.data == -1] = np.ma.masked
+            muh = np.empty(len(tr.data) * 2, tr.data.dtype)
+            muh[0::2] = tr.data
+            muh[1::2] = -tr.data
+            tr.data = muh
+            tr.stats.delta = tr.stats.delta / 2
+        # XXX
+        st.sort()
+        try:
+            data = st.plot(format="png")
+        except:
+            return ''
+        # set content type
+        request.setHeader('content-type', 'image/png')
+        return data
+
+    def _createJSON(self, request):
+        st, start, end = _getPreview(self.env.db.session(), **request.args0)
+        st.trim(start, end, pad=True)
+        # build up JSON string
+        data = {}
+        for tr in st:
+            data[tr.id] = {}
+            data[tr.id]['stats'] = dict(tr.stats)
+            data[tr.id]['data'] = list(tr.data)
+        # set content type
+        request.setHeader('content-type', 'application/json; charset=UTF-8')
+        return json.dumps({'stream': data}, cls=CustomJSONEncoder, indent=4)
