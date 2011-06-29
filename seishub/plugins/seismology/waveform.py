@@ -489,7 +489,7 @@ class WaveformPreviewMapper(Component):
         for tr in st:
             data[tr.id] = {}
             data[tr.id]['stats'] = dict(tr.stats)
-            data[tr.id]['data'] = list(tr.data)
+            data[tr.id]['data'] = tr.data.tolist()
         # set content type
         request.setHeader('content-type', 'application/json; charset=UTF-8')
         return json.dumps({'stream': data}, cls=CustomJSONEncoder, indent=4)
