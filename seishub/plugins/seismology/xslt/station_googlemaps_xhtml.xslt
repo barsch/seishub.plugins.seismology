@@ -6,7 +6,6 @@
     doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
     encoding="utf-8" indent="yes" media-type="text/html" method="xml"
     omit-xml-declaration="yes" />
-  <xsl:param name="google_api_key" />
   <xsl:template
     match="/xseed/station_control_header/channel_identifier/channel_identifier">
     <xsl:value-of select="current()" />
@@ -22,43 +21,41 @@
         </title>
         <link href="http://www.seishub.org/css/components.css" rel="stylesheet"
           type="text/css" />
+        <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"> </script>
         <script type="text/javascript">
-          <xsl:attribute name="src">
-            <xsl:text>http://www.google.com/jsapi?key=</xsl:text>
-            <xsl:value-of select="$google_api_key" />
-          </xsl:attribute>
+          <xsl:text>
+<![CDATA[
+  function initialize()
+  {
+]]>
+          </xsl:text>
+          <xsl:text>var lat = </xsl:text>
+          <xsl:value-of select="station_control_header/station_identifier/latitude" />
+          <xsl:text>; var long = </xsl:text>
+          <xsl:value-of select="station_control_header/station_identifier/longitude" />
+          <xsl:text>; var title = "</xsl:text>
+          <xsl:value-of select="station_control_header/station_identifier/station_call_letters" />
+          <xsl:text>";</xsl:text>
+          <xsl:text>
+<![CDATA[
+    var latlng = new google.maps.LatLng(lat, long);
+    var myOptions = {
+        zoom: 13,
+        center: latlng,
+        mapTypeId: google.maps.MapTypeId.TERRAIN
+    };
+    var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+    var marker = new google.maps.Marker({
+        position: latlng, 
+        map: map,
+        title: title
+    });
+  }
+]]>
+          </xsl:text>
         </script>
-        <script type="text/javascript">
-                    <xsl:text>
-<![CDATA[
-    google.load("maps", "2.x");
-    
-    function initialize() {
-      if (GBrowserIsCompatible()) {
-        var map = new GMap2(document.getElementById("map_canvas"));
-]]>
-                    </xsl:text>
-                    <xsl:text>var lat = </xsl:text>
-                    <xsl:value-of select="station_control_header/station_identifier/latitude" />
-                    <xsl:text>; var long = </xsl:text>
-                    <xsl:value-of select="station_control_header/station_identifier/longitude" />
-                    <xsl:text>;</xsl:text>
-                    <xsl:text>
-<![CDATA[
-        map.addControl(new GLargeMapControl());
-        map.addControl(new GMapTypeControl());
-        map.addMapType(G_PHYSICAL_MAP);
-        var center = new GLatLng(lat, long);
-        map.setCenter(center, 13);
-        var marker = new GMarker(center, {});
-        map.addOverlay(marker);
-      }
-    }
-]]>
-                    </xsl:text>
-                </script>
       </head>
-      <body onload="initialize()" onunload="GUnload()">
+      <body onload="initialize()">
         <h1>
           <xsl:value-of
             select="station_control_header/station_identifier/station_call_letters"
@@ -110,7 +107,8 @@
             </td>
           </tr>
         </table>
-        <div id="map_canvas" style="margin-top: 20px; width: 700px; height: 500px" />
+        <div id="map_canvas"
+          style="margin-top: 20px; width: 700px; height: 500px" />
       </body>
     </html>
   </xsl:template>
