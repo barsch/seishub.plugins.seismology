@@ -14,6 +14,12 @@
             <event_id>
                 <xsl:value-of select="../event/@publicID" />
             </event_id>
+            <event_type>
+              <value><xsl:value-of select="evaluationMode" /></value>
+              <account>seiscomp3</account>
+              <user/>
+              <public>False</public>
+            </event_type>
             <xsl:for-each select="../pick">
                 <pick>
                     <waveform>
@@ -73,7 +79,7 @@
                 </depth>
             </origin>
             <xsl:for-each
-                select="networkMagnitude[@publicID=string(../../event/preferredMagnitudeID/text())]">
+                select="magnitude[@publicID=string(../../event/preferredMagnitudeID/text())]">
                 <magnitude>
                     <mag>
                         <value>
