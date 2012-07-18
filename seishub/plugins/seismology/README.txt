@@ -30,4 +30,5 @@ Dependencies
     * obspy.imaging
     * obspy.xseed
     * obspy.arclink
-    * obspy.db (https://svn.obspy.org/obspy.db/trunk#egg=obspy.db-dev)
+    * obspy.db
+
