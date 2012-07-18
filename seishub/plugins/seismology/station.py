@@ -132,7 +132,7 @@ class StationPanel(Component):
         """
         # network
         query = sql.text("""
-            SELECT network_id 
+            SELECT network_id
             FROM "/seismology/station"
             GROUP BY network_id
             ORDER BY network_id
@@ -152,7 +152,7 @@ class StationPanel(Component):
         if not network_id:
             return []
         query = sql.text("""
-            SELECT station_id 
+            SELECT station_id
             FROM "/seismology/station"
             WHERE network_id = :network_id
             GROUP BY station_id
@@ -180,7 +180,7 @@ class StationIDMapper(Component):
         Fetches all station id's grouped by network_id.
         """
         query = sql.text("""
-            SELECT network_id, station_id 
+            SELECT network_id, station_id
             FROM "/seismology/station"
             GROUP BY network_id, station_id
             ORDER BY network_id, station_id
