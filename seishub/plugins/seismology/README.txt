@@ -6,7 +6,7 @@ Copyright
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 
-    Copyright (c) 2007-2011 by:
+    Copyright (c) 2007-2012 by:
         * Robert Barsch
         * Moritz Beyreuther
         * Tobias Megies 
