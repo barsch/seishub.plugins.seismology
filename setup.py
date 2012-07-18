@@ -61,7 +61,7 @@ setup(
         'obspy.arclink',
         'obspy.db',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de/svn/seishub/trunk/seishub.plugins.seismology#egg=seishub.plugins.seismology-dev",
+    download_url="https://github.com/barsch/seishub.plugins.seismology/zipball/master#egg=seishub.plugins.seismology-dev",
     entry_points={'seishub.plugins': [
         'seishub.plugins.seismology = seishub.plugins.seismology', ]
     },
