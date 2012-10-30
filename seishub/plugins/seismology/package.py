@@ -94,6 +94,7 @@ class SeismicEventResourceType(Component):
     package_id = 'seismology'
     resourcetype_id = 'event'
 
+    registerSchema('xsd' + os.sep + 'QuakeML-1.2.xsd ', 'XMLSchema')
     registerStylesheet('xslt' + os.sep + 'event_metadata.xslt', 'metadata')
     registerStylesheet('xslt' + os.sep + 'event_googlemaps_xhtml.xslt', 'map')
     registerStylesheet('xslt' + os.sep + 'seiscomp2earthworm.xslt', 'seiscomp')
@@ -110,11 +111,8 @@ class SeismicEventResourceType(Component):
     registerIndex('depth',
                   '/event/origin/depth/value',
                   'numeric')
-    registerIndex('used_p',
-                  '/event/origin/originQuality/P_usedPhaseCount',
-                  'integer')
-    registerIndex('used_s',
-                  '/event/origin/originQuality/S_usedPhaseCount',
+    registerIndex('used_phase_count',
+                  '/event/origin/quality/usedPhaseCount',
                   'integer')
     registerIndex('magnitude',
                   '/event/magnitude/mag/value',
@@ -150,10 +148,9 @@ class SeismicEventResourceType(Component):
                   '/event/focalMechanism/momentTensor/tensor/Mtp/value',
                   'numeric')
     registerIndex('event_type', '/event/type', 'text')
-    registerIndex('localisation_method', '/event/event_type/value', 'text')
-    registerIndex('user', '/event/event_type/user', 'text')
-    registerIndex('account', '/event/event_type/account', 'text')
-    registerIndex('public', '/event/event_type/public', 'boolean')
+    registerIndex('evaluation_mode', '/event/evaluationMode', 'text')
+    registerIndex('author', '/event/creationInfo/author', 'text')
+    registerIndex('public', '/event/public', 'boolean')
 
     registerAlias('/seismology/event/last20BigEvents',
                   "/seismology/event[magnitude>=2.0] " + \
