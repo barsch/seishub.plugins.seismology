@@ -14,6 +14,9 @@ from seishub.core.xmldb import index
 import os
 
 
+XPATH_EVENT = '/{http://quakeml.org/xmlns/quakeml/1.2}quakeml/eventParameters/event'
+
+
 class SeismologyPackage(Component):
     """
     Seismology package for SeisHub.
@@ -100,57 +103,57 @@ class SeismicEventResourceType(Component):
     registerStylesheet('xslt' + os.sep + 'seiscomp2earthworm.xslt', 'seiscomp')
 
     registerIndex('datetime',
-                  '/event/origin/time/value',
+                  '%s/origin/time/value' % XPATH_EVENT,
                   'datetime')
     registerIndex('latitude',
-                  '/event/origin/latitude/value',
+                  '%s/origin/latitude/value' % XPATH_EVENT,
                   'numeric')
     registerIndex('longitude',
-                  '/event/origin/longitude/value',
+                  '%s/origin/longitude/value' % XPATH_EVENT,
                   'numeric')
     registerIndex('depth',
-                  '/event/origin/depth/value',
+                  '%s/origin/depth/value' % XPATH_EVENT,
                   'numeric')
     registerIndex('used_phase_count',
-                  '/event/origin/quality/usedPhaseCount',
+                  '%s/origin/quality/usedPhaseCount' % XPATH_EVENT,
                   'integer')
     registerIndex('magnitude',
-                  '/event/magnitude/mag/value',
+                  '%s/magnitude/mag/value' % XPATH_EVENT,
                   'numeric')
     registerIndex('magnitude_type',
-                  '/event/magnitude/type',
+                  '%s/magnitude/type' % XPATH_EVENT,
                   'text')
     registerIndex('np1_strike',
-                  '/event/focalMechanism/nodalPlanes/nodalPlane1/strike/value',
+                  '%s/focalMechanism/nodalPlanes/nodalPlane1/strike/value' % XPATH_EVENT,
                   'numeric')
     registerIndex('np1_dip',
-                  '/event/focalMechanism/nodalPlanes/nodalPlane1/dip/value',
+                  '%s/focalMechanism/nodalPlanes/nodalPlane1/dip/value' % XPATH_EVENT,
                   'numeric')
     registerIndex('np1_rake',
-                  '/event/focalMechanism/nodalPlanes/nodalPlane1/rake/value',
+                  '%s/focalMechanism/nodalPlanes/nodalPlane1/rake/value' % XPATH_EVENT,
                   'numeric')
     registerIndex('mt_mrr',
-                  '/event/focalMechanism/momentTensor/tensor/Mrr/value',
+                  '%s/focalMechanism/momentTensor/tensor/Mrr/value' % XPATH_EVENT,
                   'numeric')
     registerIndex('mt_mtt',
-                  '/event/focalMechanism/momentTensor/tensor/Mtt/value',
+                  '%s/focalMechanism/momentTensor/tensor/Mtt/value' % XPATH_EVENT,
                   'numeric')
     registerIndex('mt_mpp',
-                  '/event/focalMechanism/momentTensor/tensor/Mpp/value',
+                  '%s/focalMechanism/momentTensor/tensor/Mpp/value' % XPATH_EVENT,
                   'numeric')
     registerIndex('mt_mrt',
-                  '/event/focalMechanism/momentTensor/tensor/Mrt/value',
+                  '%s/focalMechanism/momentTensor/tensor/Mrt/value' % XPATH_EVENT,
                   'numeric')
     registerIndex('mt_mrp',
-                  '/event/focalMechanism/momentTensor/tensor/Mrp/value',
+                  '%s/focalMechanism/momentTensor/tensor/Mrp/value' % XPATH_EVENT,
                   'numeric')
     registerIndex('mt_mtp',
-                  '/event/focalMechanism/momentTensor/tensor/Mtp/value',
+                  '%s/focalMechanism/momentTensor/tensor/Mtp/value' % XPATH_EVENT,
                   'numeric')
-    registerIndex('event_type', '/event/type', 'text')
-    registerIndex('evaluation_mode', '/event/evaluationMode', 'text')
-    registerIndex('author', '/event/creationInfo/author', 'text')
-    registerIndex('public', '/event/public', 'boolean')
+    registerIndex('event_type', '%s/type' % XPATH_EVENT, 'text')
+    registerIndex('evaluation_mode', '%s/{http://erdbeben-in-bayern.de/xmlns/0.1}evaluationMode' % XPATH_EVENT, 'text')
+    registerIndex('author', '%s/creationInfo/author' % XPATH_EVENT, 'text')
+    registerIndex('public', '%s/{http://erdbeben-in-bayern.de/xmlns/0.1}public' % XPATH_EVENT, 'boolean')
 
     registerAlias('/seismology/event/last20BigEvents',
                   "/seismology/event[magnitude>=2.0] " + \
@@ -171,7 +174,7 @@ class FirstPickIndex(Component):
     def eval(self, document):
         # fetch all pick times
         doc = document.getXml_doc()
-        picks = doc.evalXPath('/event/pick/time/value/text()')
+        picks = doc.evalXPath('%s/pick/time/value' % XPATH_EVENT)
         if not picks:
             return None
         # get first pick
@@ -197,7 +200,7 @@ class LastPickIndex(Component):
     def eval(self, document):
         # fetch all pick times
         doc = document.getXml_doc()
-        picks = doc.evalXPath('/event/pick/time/value/text()')
+        picks = doc.evalXPath('%s/pick/time/value' % XPATH_EVENT)
         if not picks:
             return None
         # get last pick
