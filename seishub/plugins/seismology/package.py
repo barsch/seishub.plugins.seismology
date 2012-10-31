@@ -15,6 +15,7 @@ import os
 
 
 XPATH_EVENT = '/{http://quakeml.org/xmlns/quakeml/1.2}quakeml/eventParameters/event'
+NAMESPACE_EDB = "http://erdbeben-in-bayern.de/xmlns/0.1"
 
 
 class SeismologyPackage(Component):
@@ -151,9 +152,9 @@ class SeismicEventResourceType(Component):
                   '%s/focalMechanism/momentTensor/tensor/Mtp/value' % XPATH_EVENT,
                   'numeric')
     registerIndex('event_type', '%s/type' % XPATH_EVENT, 'text')
-    registerIndex('evaluation_mode', '%s/{http://erdbeben-in-bayern.de/xmlns/0.1}evaluationMode' % XPATH_EVENT, 'text')
+    registerIndex('evaluation_mode', '%s/{%s}evaluationMode' % (XPATH_EVENT, NAMESPACE_EDB), 'text')
     registerIndex('author', '%s/creationInfo/author' % XPATH_EVENT, 'text')
-    registerIndex('public', '%s/{http://erdbeben-in-bayern.de/xmlns/0.1}public' % XPATH_EVENT, 'boolean')
+    registerIndex('public', '%s/{%s}public' % (XPATH_EVENT, NAMESPACE_EDB), 'boolean')
 
     registerAlias('/seismology/event/last20BigEvents',
                   "/seismology/event[magnitude>=2.0] " + \
