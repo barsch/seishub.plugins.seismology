@@ -9,7 +9,8 @@ Copyright
     Copyright (c) 2007-2012 by:
         * Robert Barsch
         * Moritz Beyreuther
-        * Tobias Megies 
+        * Tobias Megies
+        * Lion Krischer
 
 
 Overview
