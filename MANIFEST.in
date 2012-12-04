@@ -1,0 +1,10 @@
+include seishub/plugins/seismology/README.txt
+include seishub/plugins/seismology/LICENSE.txt
+include seishub/plugins/seismology/VERSION.txt
+include seishub/plugins/seismology/examples/*
+include seishub/plugins/seismology/statics/markercluster/*
+include seishub/plugins/seismology/statics/seisgram2k/*
+include seishub/plugins/seismology/templates/*
+include seishub/plugins/seismology/tests/data/*
+include seishub/plugins/seismology/xsd/*
+include seishub/plugins/seismology/xslt/*
