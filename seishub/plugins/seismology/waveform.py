@@ -352,7 +352,8 @@ class WaveformCutterMapper(Component):
         # XXX: Temporary fix so old ObsPy client still work correctly. See
         # https://github.com/obspy/obspy/commit/96825b728f2d0585845c1a628efe5c447466dcec
         # Should eventually be removed
-        if apply_filter.lower() == "false":
+        if isinstance(apply_filter, basestring) and \
+            apply_filter.lower() == "false":
             apply_filter = None
         # execute query
         results = query.all()
