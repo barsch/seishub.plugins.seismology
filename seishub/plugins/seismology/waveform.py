@@ -349,6 +349,11 @@ class WaveformCutterMapper(Component):
         finally:
             query = query.filter(WaveformChannel.starttime < end.datetime)
         apply_filter = request.args0.get('apply_filter', None)
+        # XXX: Temporary fix so old ObsPy client still work correctly. See
+        # https://github.com/obspy/obspy/commit/96825b728f2d0585845c1a628efe5c447466dcec
+        # Should eventually be removed
+        if apply_filter.lower() == "false":
+            apply_filter = None
         # execute query
         results = query.all()
         session.close()
