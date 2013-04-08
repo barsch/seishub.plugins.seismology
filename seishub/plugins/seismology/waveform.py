@@ -318,11 +318,17 @@ class WaveformCutterMapper(Component):
                               WaveformFile.format)
         query = query.filter(WaveformPath.id == WaveformFile.path_id)
         query = query.filter(WaveformFile.id == WaveformChannel.file_id)
+        # if more than one seed id stored in one and the same file we need to
+        # make sure to only use this specific one from the file
+        select_kwargs = {}
         # process arguments
         for key in ['network_id', 'station_id', 'location_id', 'channel_id']:
             text = request.args0.get(key, None)
             if text == None:
                 continue
+            # remember constraint for Stream.select() after read()
+            short_key = key.split("_")[0]
+            select_kwargs[short_key] = text
             col = getattr(WaveformChannel, key[:-3])
             if text == "":
                 query = query.filter(col == None)
@@ -386,6 +392,9 @@ class WaveformCutterMapper(Component):
                         continue
                 except:
                     continue
+                # deselect unwanted traces with other seed_ids from read result
+                if select_kwargs:
+                    st = st.select(**select_kwargs)
                 # trim
                 st.trim(start, end)
                 for tr in st:
