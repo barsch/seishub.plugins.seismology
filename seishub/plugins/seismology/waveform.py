@@ -406,10 +406,6 @@ class WaveformCutterMapper(Component):
                     stream.append(tr)
                 del st
 
-        # Filter in the case it is a multi-component non MiniSEED file.
-        stream = stream.select(network=result[2], station=result[3],
-            location=result[4], channel=result[5])
-
         # pickle stream
         data = pickle.dumps(stream, protocol=2)
         del stream
