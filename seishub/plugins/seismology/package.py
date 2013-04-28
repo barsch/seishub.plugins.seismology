@@ -14,7 +14,8 @@ from seishub.core.xmldb import index
 import os
 
 
-XPATH_EVENT = '/{http://quakeml.org/xmlns/quakeml/1.2}quakeml/eventParameters/event'
+XPATH_EVENT = \
+    '/{http://quakeml.org/xmlns/quakeml/1.2}quakeml/eventParameters/event'
 NAMESPACE_EDB = "http://erdbeben-in-bayern.de/xmlns/0.1"
 
 
@@ -98,7 +99,7 @@ class SeismicEventResourceType(Component):
     package_id = 'seismology'
     resourcetype_id = 'event'
 
-    registerSchema('xsd' + os.sep + 'QuakeML-1.2.xsd ', 'XMLSchema')
+    registerSchema('relaxng' + os.sep + 'QuakeML-1.2-merged.rng', 'RelaxNG')
     registerStylesheet('xslt' + os.sep + 'event_metadata.xslt', 'metadata')
     registerStylesheet('xslt' + os.sep + 'event_googlemaps_xhtml.xslt', 'map')
     registerStylesheet('xslt' + os.sep + 'seiscomp2earthworm.xslt', 'seiscomp')
