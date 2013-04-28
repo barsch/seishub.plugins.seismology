@@ -8,3 +8,4 @@ include seishub/plugins/seismology/templates/*
 include seishub/plugins/seismology/tests/data/*
 include seishub/plugins/seismology/xsd/*
 include seishub/plugins/seismology/xslt/*
+include seishub/plugins/seismology/relaxng/*
