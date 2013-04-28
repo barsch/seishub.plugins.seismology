@@ -52,14 +52,6 @@ setup(
     install_requires=[
         'setuptools',
         'seishub.core',
-        'obspy.core',
-        'obspy.mseed',
-        'obspy.gse2',
-        'obspy.seishub',
-        'obspy.imaging',
-        'obspy.xseed',
-        'obspy.arclink',
-        'obspy.db',
     ],
     download_url="https://github.com/barsch/seishub.plugins.seismology/zipball/master#egg=seishub.plugins.seismology-dev",
     entry_points={'seishub.plugins': [

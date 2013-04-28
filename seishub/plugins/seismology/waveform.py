@@ -318,11 +318,17 @@ class WaveformCutterMapper(Component):
                               WaveformFile.format)
         query = query.filter(WaveformPath.id == WaveformFile.path_id)
         query = query.filter(WaveformFile.id == WaveformChannel.file_id)
+        # if more than one seed id stored in one and the same file we need to
+        # make sure to only use this specific one from the file
+        select_kwargs = {}
         # process arguments
         for key in ['network_id', 'station_id', 'location_id', 'channel_id']:
             text = request.args0.get(key, None)
             if text == None:
                 continue
+            # remember constraint for Stream.select() after read()
+            short_key = key.split("_")[0]
+            select_kwargs[short_key] = text
             col = getattr(WaveformChannel, key[:-3])
             if text == "":
                 query = query.filter(col == None)
@@ -349,6 +355,12 @@ class WaveformCutterMapper(Component):
         finally:
             query = query.filter(WaveformChannel.starttime < end.datetime)
         apply_filter = request.args0.get('apply_filter', None)
+        # XXX: Temporary fix so old ObsPy client still work correctly. See
+        # https://github.com/obspy/obspy/commit/96825b728f2d0585845c1a628efe5c447466dcec
+        # Should eventually be removed
+        if isinstance(apply_filter, basestring) and \
+            apply_filter.lower() == "false":
+            apply_filter = None
         # execute query
         results = query.all()
         session.close()
@@ -363,18 +375,26 @@ class WaveformCutterMapper(Component):
         else:
             # get from local waveform archive
             for result in results:
+                # The sourcename is passed to the MiniSEED reading method and
+                # will have the effect of not even reading non-requested
+                # records. If another file format is read, it is ignored.
+                sourcename = "%s.%s.%s.%s" % result[2:6]
                 fname = result[0] + os.sep + result[1]
                 try:
                     st = read(fname, format=result[6], starttime=start,
-                              endtime=end)
+                        sourcename=sourcename, endtime=end)
                 except ChksumError:
                     try:
                         st = read(fname, format=result[6], starttime=start,
-                                  endtime=end, verify_chksum=False)
+                          sourcename=sourcename, endtime=end,
+                          verify_chksum=False)
                     except:
                         continue
                 except:
                     continue
+                # deselect unwanted traces with other seed_ids from read result
+                if select_kwargs:
+                    st = st.select(**select_kwargs)
                 # trim
                 st.trim(start, end)
                 for tr in st:
@@ -385,6 +405,7 @@ class WaveformCutterMapper(Component):
                         tr.stats.channel = result[5]
                     stream.append(tr)
                 del st
+
         # pickle stream
         data = pickle.dumps(stream, protocol=2)
         del stream
