@@ -119,6 +119,12 @@ class SeismicEventResourceType(Component):
     registerIndex('used_phase_count',
                   '%s/origin/quality/usedPhaseCount' % XPATH_EVENT,
                   'integer')
+    registerIndex('used_phase_count_p',
+                  '%s/origin/quality/usedPhaseCountP' % XPATH_EVENT,
+                  'integer')
+    registerIndex('used_phase_count_s',
+                  '%s/origin/quality/usedPhaseCountS' % XPATH_EVENT,
+                  'integer')
     registerIndex('magnitude',
                   '%s/magnitude/mag/value' % XPATH_EVENT,
                   'numeric')
