@@ -102,7 +102,7 @@ class SeismicEventResourceType(Component):
     registerSchema('relaxng' + os.sep + 'QuakeML-1.2-merged.rng', 'RelaxNG')
     registerStylesheet('xslt' + os.sep + 'event_metadata.xslt', 'metadata')
     registerStylesheet('xslt' + os.sep + 'event_googlemaps_xhtml.xslt', 'map')
-    registerStylesheet('xslt' + os.sep + 'seiscomp2earthworm.xslt', 'seiscomp')
+    registerStylesheet('xslt' + os.sep + 'seiscomp2quakeml.xslt', 'seiscomp')
 
     registerIndex('datetime',
                   '%s/origin/time/value' % XPATH_EVENT,
