@@ -50,7 +50,7 @@ class EventListMapper(Component):
         query = sql.select([tab])
         # process arguments
         # this is a string value, it returns None if nothing is given
-        for key in ['localisation_method', 'account', 'user']:
+        for key in ['evaluation_mode', 'author']:
             temp = request.args0.get(key)
             if temp:
                 query = query.where(tab.c[key] == temp)
@@ -89,7 +89,7 @@ class EventListMapper(Component):
             except:
                 pass
         # min-max integer values
-        for key in ['used_p', 'used_s']:
+        for key in ['used_phase_count']:
             try:
                 temp = int(request.args0.get(key))
                 query = query.where(tab.c[key] == temp)

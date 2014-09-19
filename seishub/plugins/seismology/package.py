@@ -14,6 +14,22 @@ from seishub.core.xmldb import index
 import os
 
 
+XPATH_EVENT = \
+    '/{http://quakeml.org/xmlns/quakeml/1.2}quakeml/eventParameters/event[position()=1]'
+XPATH_ORIGIN_PREFERRED = (
+    '%s/origin[@publicID=string(../preferredOriginID/text())]'
+    % XPATH_EVENT)
+XPATH_ORIGIN_FIRST = '%s/origin[position()=1]' % XPATH_EVENT
+XPATH_MAGNITUDE_PREFERRED = (
+    '%s/magnitude[@publicID=string(../preferredMagnitudeID/text())]'
+    % XPATH_EVENT)
+XPATH_MAGNITUDE_FIRST = '%s/magnitude[position()=1]' % XPATH_EVENT
+XPATH_FOCALMECHANISM_PREFERRED = (
+    '%s/focalMechanism[@publicID=string(../preferredFocalMechanismID/text())]'
+    % XPATH_EVENT)
+XPATH_FOCALMECHANISM_FIRST = '%s/focalMechanism[position()=1]' % XPATH_EVENT
+NAMESPACE_EDB = "http://erdbeben-in-bayern.de/xmlns/0.1"
+
 class SeismologyPackage(Component):
     """
     Seismology package for SeisHub.
@@ -94,66 +110,19 @@ class SeismicEventResourceType(Component):
     package_id = 'seismology'
     resourcetype_id = 'event'
 
+    registerSchema('relaxng' + os.sep + 'QuakeML-1.2-merged.rng', 'RelaxNG')
     registerStylesheet('xslt' + os.sep + 'event_metadata.xslt', 'metadata')
     registerStylesheet('xslt' + os.sep + 'event_googlemaps_xhtml.xslt', 'map')
-    registerStylesheet('xslt' + os.sep + 'seiscomp2earthworm.xslt', 'seiscomp')
+    registerStylesheet('xslt' + os.sep + 'seiscomp2quakeml.xslt', 'seiscomp')
 
-    registerIndex('datetime',
-                  '/event/origin/time/value',
-                  'datetime')
-    registerIndex('latitude',
-                  '/event/origin/latitude/value',
-                  'numeric')
-    registerIndex('longitude',
-                  '/event/origin/longitude/value',
-                  'numeric')
-    registerIndex('depth',
-                  '/event/origin/depth/value',
-                  'numeric')
-    registerIndex('used_p',
-                  '/event/origin/originQuality/P_usedPhaseCount',
-                  'integer')
-    registerIndex('used_s',
-                  '/event/origin/originQuality/S_usedPhaseCount',
-                  'integer')
-    registerIndex('magnitude',
-                  '/event/magnitude/mag/value',
-                  'numeric')
-    registerIndex('magnitude_type',
-                  '/event/magnitude/type',
+    registerIndex('event_type', '%s/type' % XPATH_EVENT, 'text')
+    registerIndex('evaluation_mode',
+                  '%s/{%s}evaluationMode' % (XPATH_EVENT, NAMESPACE_EDB),
                   'text')
-    registerIndex('np1_strike',
-                  '/event/focalMechanism/nodalPlanes/nodalPlane1/strike/value',
-                  'numeric')
-    registerIndex('np1_dip',
-                  '/event/focalMechanism/nodalPlanes/nodalPlane1/dip/value',
-                  'numeric')
-    registerIndex('np1_rake',
-                  '/event/focalMechanism/nodalPlanes/nodalPlane1/rake/value',
-                  'numeric')
-    registerIndex('mt_mrr',
-                  '/event/focalMechanism/momentTensor/tensor/Mrr/value',
-                  'numeric')
-    registerIndex('mt_mtt',
-                  '/event/focalMechanism/momentTensor/tensor/Mtt/value',
-                  'numeric')
-    registerIndex('mt_mpp',
-                  '/event/focalMechanism/momentTensor/tensor/Mpp/value',
-                  'numeric')
-    registerIndex('mt_mrt',
-                  '/event/focalMechanism/momentTensor/tensor/Mrt/value',
-                  'numeric')
-    registerIndex('mt_mrp',
-                  '/event/focalMechanism/momentTensor/tensor/Mrp/value',
-                  'numeric')
-    registerIndex('mt_mtp',
-                  '/event/focalMechanism/momentTensor/tensor/Mtp/value',
-                  'numeric')
-    registerIndex('event_type', '/event/type', 'text')
-    registerIndex('localisation_method', '/event/event_type/value', 'text')
-    registerIndex('user', '/event/event_type/user', 'text')
-    registerIndex('account', '/event/event_type/account', 'text')
-    registerIndex('public', '/event/event_type/public', 'boolean')
+    registerIndex('author', '%s/creationInfo/author' % XPATH_EVENT, 'text')
+    registerIndex('public',
+                  '%s/{%s}public' % (XPATH_EVENT, NAMESPACE_EDB),
+                  'boolean')
 
     registerAlias('/seismology/event/last20BigEvents',
                   "/seismology/event[magnitude>=2.0] " + \
@@ -174,7 +143,7 @@ class FirstPickIndex(Component):
     def eval(self, document):
         # fetch all pick times
         doc = document.getXml_doc()
-        picks = doc.evalXPath('/event/pick/time/value/text()')
+        picks = doc.evalXPath('%s/pick/time/value' % XPATH_EVENT)
         if not picks:
             return None
         # get first pick
@@ -200,7 +169,7 @@ class LastPickIndex(Component):
     def eval(self, document):
         # fetch all pick times
         doc = document.getXml_doc()
-        picks = doc.evalXPath('/event/pick/time/value/text()')
+        picks = doc.evalXPath('%s/pick/time/value' % XPATH_EVENT)
         if not picks:
             return None
         # get last pick
@@ -210,3 +179,129 @@ class LastPickIndex(Component):
             if temp > saved:
                 saved = temp
         return saved
+
+
+class DatetimeIndex(Component):
+    """
+    Indexes origin time of an event resource.
+    Looks up preferred origin or if it is not defined uses the first origin
+    in the document.
+    """
+    implements(IProcessorIndex)
+
+    package_id = 'seismology'
+    resourcetype_id = 'event'
+    type = index.DATETIME_INDEX
+    type_mapper = UTCDateTime
+    label = 'datetime'
+    xpath_head1 = XPATH_ORIGIN_PREFERRED
+    xpath_head2 = XPATH_ORIGIN_FIRST
+    xpath_tail = "/time/value"
+
+    def eval(self, document):
+        doc = document.getXml_doc()
+        values = doc.evalXPath('%s%s' % (self.xpath_head1, self.xpath_tail))
+        print "-" * 30
+        print [str(v) for v in values]
+        if values:
+            return self.type_mapper(str(values[0]))
+        values = doc.evalXPath('%s%s' % (self.xpath_head2, self.xpath_tail))
+        print [str(v) for v in values]
+        if values:
+            return self.type_mapper(str(values[0]))
+        return None
+
+
+class LatitudeIndex(DatetimeIndex):
+    type = index.NUMERIC_INDEX
+    type_mapper = float
+    label = 'latitude'
+    xpath_tail = "/latitude/value"
+
+
+class LongitudeIndex(LatitudeIndex):
+    label = 'longitude'
+    xpath_tail = "/longitude/value"
+
+
+class DepthIndex(LatitudeIndex):
+    label = 'depth'
+    xpath_tail = "/depth/value"
+
+
+class PhaseCountIndex(LatitudeIndex):
+    type = index.INTEGER_INDEX
+    type_mapper = int
+    label = 'used_phase_count'
+    xpath_tail = "/quality/usedPhaseCount"
+
+
+class PhaseCountPIndex(PhaseCountIndex):
+    label = 'used_phase_count_p'
+    xpath_tail = '/quality/{%s}usedPhaseCountP' % NAMESPACE_EDB
+
+
+class PhaseCountSIndex(PhaseCountIndex):
+    label = 'used_phase_count_s'
+    xpath_tail = '/quality/{%s}usedPhaseCountS' % NAMESPACE_EDB
+
+
+class MagnitudeIndex(LatitudeIndex):
+    label = 'magnitude'
+    xpath_head1 = XPATH_MAGNITUDE_PREFERRED
+    xpath_head2 = XPATH_MAGNITUDE_FIRST
+    xpath_tail = "/mag/value"
+
+
+class MagnitudeTypeIndex(MagnitudeIndex):
+    type = index.TEXT_INDEX
+    type_mapper = str
+    label = 'magnitude_type'
+    xpath_tail = "/type"
+
+
+class Np1StrikeIndex(LatitudeIndex):
+    label = 'np1_strike'
+    xpath_head1 = XPATH_FOCALMECHANISM_PREFERRED
+    xpath_head2 = XPATH_FOCALMECHANISM_FIRST
+    xpath_tail = "/nodalPlanes/nodalPlane1/strike/value"
+
+
+class Np1DipIndex(Np1StrikeIndex):
+    label = 'np1_dip'
+    xpath_tail = "/nodalPlanes/nodalPlane1/dip/value"
+
+
+class Np1RakeIndex(Np1StrikeIndex):
+    label = 'np1_rake'
+    xpath_tail = "/nodalPlanes/nodalPlane1/rake/value"
+
+
+class MRRIndex(Np1StrikeIndex):
+    label = 'mt_mrr'
+    xpath_tail = "/momentTensor/tensor/Mrr/value"
+
+
+class MTTIndex(Np1StrikeIndex):
+    label = 'mt_mtt'
+    xpath_tail = "/momentTensor/tensor/Mtt/value"
+
+
+class MPPIndex(Np1StrikeIndex):
+    label = 'mt_mpp'
+    xpath_tail = "/momentTensor/tensor/Mpp/value"
+
+
+class MRTIndex(Np1StrikeIndex):
+    label = 'mt_mrt'
+    xpath_tail = "/momentTensor/tensor/Mrt/value"
+
+
+class MRPIndex(Np1StrikeIndex):
+    label = 'mt_mrp'
+    xpath_tail = "/momentTensor/tensor/Mrp/value"
+
+
+class MTPIndex(Np1StrikeIndex):
+    label = 'mt_mtp'
+    xpath_tail = "/momentTensor/tensor/Mtp/value"

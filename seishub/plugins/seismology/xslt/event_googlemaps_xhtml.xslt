@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet exclude-result-prefixes="xlink" version="1.0"
   xmlns:xlink="http://www.w3.org/1999/xlink"
-  xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"
+  xmlns:bed="http://quakeml.org/xmlns/bed/1.2">
   <xsl:output doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
     doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
     encoding="utf-8" indent="yes" media-type="text/html" method="xml"
     omit-xml-declaration="yes" />
-  <xsl:template match="/event">
+  <xsl:template match="/q:quakeml/bed:eventParameters/bed:event">
     <html lang="en" xml:lang="en">
       <head>
         <title>
-          <xsl:value-of select="origin/time/value" />
+          <xsl:value-of select="bed:origin/bed:time/bed:value" />
         </title>
         <link href="http://www.seishub.org/css/components.css" rel="stylesheet"
           type="text/css" />
@@ -23,11 +25,11 @@
 ]]>
           </xsl:text>
           <xsl:text>var lat = </xsl:text>
-          <xsl:value-of select="origin/latitude/value" />
+          <xsl:value-of select="bed:origin/bed:latitude/bed:value" />
           <xsl:text>; var long = </xsl:text>
-          <xsl:value-of select="origin/longitude/value" />
+          <xsl:value-of select="bed:origin/bed:longitude/bed:value" />
           <xsl:text>; var title = "</xsl:text>
-          <xsl:value-of select="origin/time/value" />
+          <xsl:value-of select="bed:origin/bed:time/bed:value" />
           <xsl:text>";</xsl:text>
           <xsl:text>
 <![CDATA[
@@ -50,44 +52,44 @@
       </head>
       <body onload="initialize()">
         <h1>
-          <xsl:value-of select="origin/time/value" />
+          <xsl:value-of select="bed:origin/bed:time/bed:value" />
           <xsl:text> +- </xsl:text>
-          <xsl:value-of select="origin/time/uncertainty" />
+          <xsl:value-of select="bed:origin/bed:time/bed:uncertainty" />
         </h1>
         <table>
           <tr>
-            <th>Magnitude (<xsl:value-of select="magnitude/type" />)</th>
+            <th>Magnitude (<xsl:value-of select="bed:magnitude/bed:type" />)</th>
             <td>
-              <xsl:value-of select="magnitude/mag/value" />
+              <xsl:value-of select="bed:magnitude/bed:mag/bed:value" />
               <xsl:text> +- </xsl:text>
-              <xsl:value-of select="magnitude/mag/uncertainty" />
+              <xsl:value-of select="bed:magnitude/bed:mag/bed:uncertainty" />
             </td>
           </tr>
           <tr>
             <th>Latitude</th>
             <td>
-              <xsl:value-of select="origin/latitude/value" />
+              <xsl:value-of select="bed:origin/bed:latitude/bed:value" />
               <xsl:text> +- </xsl:text>
-              <xsl:value-of select="origin/latitude/uncertainty" />
+              <xsl:value-of select="bed:origin/bed:latitude/bed:uncertainty" />
             </td>
           </tr>
           <tr>
             <th>Longitude</th>
             <td>
-              <xsl:value-of select="origin/longitude/value" />
+              <xsl:value-of select="bed:origin/bed:longitude/bed:value" />
               <xsl:text> +- </xsl:text>
-              <xsl:value-of select="origin/longitude/uncertainty" />
+              <xsl:value-of select="bed:origin/bed:longitude/bed:uncertainty" />
             </td>
           </tr>
           <tr>
             <th>Depth</th>
             <td>
-              <xsl:value-of select="origin/depth/value" />
+              <xsl:value-of select="bed:origin/bed:depth/bed:value" />
               <xsl:text> +- </xsl:text>
-              <xsl:value-of select="origin/depth/uncertainty" />
+              <xsl:value-of select="bed:origin/bed:depth/bed:uncertainty" />
             </td>
           </tr>
-          <xsl:if test="focalMechanism/momentTensor/tensor/Mrr/value!=''">
+          <xsl:if test="bed:focalMechanism/bed:momentTensor/bed:tensor/bed:Mrr/bed:value!=''">
             <tr>
               <th>Focal Mechanism</th>
               <td>
@@ -96,22 +98,22 @@
                     <xsl:text>/seismology/event/plotBeachball</xsl:text>
                     <xsl:text>?size=150&amp;linewidth=1&amp;fm=</xsl:text>
                     <xsl:value-of
-                      select="focalMechanism/momentTensor/tensor/Mrr/value" />
+                      select="bed:focalMechanism/bed:momentTensor/bed:tensor/bed:Mrr/bed:value" />
                     <xsl:text>,</xsl:text>
                     <xsl:value-of
-                      select="focalMechanism/momentTensor/tensor/Mtt/value" />
+                      select="bed:focalMechanism/bed:momentTensor/bed:tensor/bed:Mtt/bed:value" />
                     <xsl:text>,</xsl:text>
                     <xsl:value-of
-                      select="focalMechanism/momentTensor/tensor/Mpp/value" />
+                      select="bed:focalMechanism/bed:momentTensor/bed:tensor/bed:Mpp/bed:value" />
                     <xsl:text>,</xsl:text>
                     <xsl:value-of
-                      select="focalMechanism/momentTensor/tensor/Mrp/value" />
+                      select="bed:focalMechanism/bed:momentTensor/bed:tensor/bed:Mrp/bed:value" />
                     <xsl:text>,</xsl:text>
                     <xsl:value-of
-                      select="focalMechanism/momentTensor/tensor/Mrt/value" />
+                      select="bed:focalMechanism/bed:momentTensor/bed:tensor/bed:Mrt/bed:value" />
                     <xsl:text>,</xsl:text>
                     <xsl:value-of
-                      select="focalMechanism/momentTensor/tensor/Mtp/value" />
+                      select="bed:focalMechanism/bed:momentTensor/bed:tensor/bed:Mtp/bed:value" />
                   </xsl:attribute>
                 </img>
               </td>
