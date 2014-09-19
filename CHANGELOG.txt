@@ -1,0 +1,2 @@
+1.4.0:
+ * changes for quakeml support
