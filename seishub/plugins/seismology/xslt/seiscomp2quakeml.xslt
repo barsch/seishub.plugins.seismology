@@ -35,18 +35,22 @@
             </xsl:attribute>
             <xsl:apply-templates select="sc3:event/*" />
             <!-- origin and magnitude -->
+            <xsl:if test="sc3:origin[@publicID=$ORIGINID]">
             <origin>
                 <xsl:attribute name="publicID">
                     <xsl:value-of select="$SMIROOT"/>/origin/<xsl:value-of select="translate($ORIGINID, '#', '/')"/>
                 </xsl:attribute>
                 <xsl:apply-templates select="sc3:origin[@publicID=$ORIGINID]/*[not(self::sc3:stationMagnitude or self::sc3:magnitude)]" />
             </origin>
+            </xsl:if>
+            <xsl:if test="sc3:origin/sc3:magnitude[@publicID=$MAGNITUDEID]">
             <magnitude>
                 <xsl:attribute name="publicID">
                     <xsl:value-of select="$SMIROOT"/>/magnitude/<xsl:value-of select="translate($MAGNITUDEID, '#', '/')"/>
                 </xsl:attribute>
                 <xsl:apply-templates select="sc3:origin/sc3:magnitude[@publicID=$MAGNITUDEID]/*" />
             </magnitude>
+            </xsl:if>
             <!-- picks -->
             <xsl:for-each select="sc3:pick">
                 <xsl:variable name="PICKID">
