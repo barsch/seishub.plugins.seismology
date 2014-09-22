@@ -237,12 +237,12 @@ class PhaseCountIndex(LatitudeIndex):
 
 
 class PhaseCountPIndex(PhaseCountIndex):
-    label = 'used_phase_count_p'
+    label = 'used_p'
     xpath_tail = '/quality/{%s}usedPhaseCountP' % NAMESPACE_EDB
 
 
 class PhaseCountSIndex(PhaseCountIndex):
-    label = 'used_phase_count_s'
+    label = 'used_s'
     xpath_tail = '/quality/{%s}usedPhaseCountS' % NAMESPACE_EDB
 
 
