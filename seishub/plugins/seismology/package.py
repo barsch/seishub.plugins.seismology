@@ -201,12 +201,9 @@ class DatetimeIndex(Component):
     def eval(self, document):
         doc = document.getXml_doc()
         values = doc.evalXPath('%s%s' % (self.xpath_head1, self.xpath_tail))
-        print "-" * 30
-        print [str(v) for v in values]
         if values:
             return self.type_mapper(str(values[0]))
         values = doc.evalXPath('%s%s' % (self.xpath_head2, self.xpath_tail))
-        print [str(v) for v in values]
         if values:
             return self.type_mapper(str(values[0]))
         return None
