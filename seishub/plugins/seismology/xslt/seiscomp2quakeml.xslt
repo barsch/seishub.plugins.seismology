@@ -121,9 +121,6 @@
     <xsl:template match="sc3:origin/sc3:earthModelID">
         <earthModelID><xsl:value-of select="$SMIROOT"/>/earth_model/<xsl:value-of select="translate(., '#', '/')"/></earthModelID>
     </xsl:template>
-    <xsl:template match="sc3:agencyID">
-        <agencyID><xsl:value-of select="$SMIROOT"/>/agency/<xsl:value-of select="translate(., '#', '/')"/></agencyID>
-    </xsl:template>
     <xsl:template match="sc3:pickID">
         <pickID><xsl:value-of select="$SMIROOT"/>/pick/<xsl:value-of select="translate(., '#', '/')"/></pickID>
     </xsl:template>
